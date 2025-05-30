@@ -59,9 +59,9 @@ const Header = () => {
   return (
     <header className="relative z-[100]">
       <div className="header-bg w-full h-24 overflow-hidden relative">
-        <div className="dragon-balls absolute top-0 left-0 w-full h-full opacity-30">
-          {/* Dragon ball orbs as background elements would be added here */}
-        </div>
+        {/* <div className="dragon-balls absolute top-0 left-0 w-full h-full opacity-30">
+         
+        </div> */}
 
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           <nav className="w-full">
@@ -119,13 +119,16 @@ const Header = () => {
             <div className="md:hidden flex justify-between items-center">
               <a href="/">
                 <img
-                  src="https://ext.same-assets.com/2307704348/3973876092.png"
+                  src="/images/logo-main.png"
                   alt="Logo"
                   className="h-16 w-auto"
                 />
               </a>
               <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                onClick={() => {
+                  setIsMenuOpen(!isMenuOpen)
+                  
+                }}
                 className="text-white p-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
@@ -136,7 +139,7 @@ const Header = () => {
 
             {/* Mobile menu */}
             {isMenuOpen && (
-              <div className="md:hidden absolute top-24 left-0 w-full bg-[#2a212e] border-t border-[#e1ac31]/30 z-20">
+              <div className="md:hidden fixed top-24 left-0 w-full bg-[#2a212e] border-t border-[#e1ac31]/30 z-[9999]">
                 <ul className="flex flex-col p-4 space-y-3">
                   <li>
                     <a
