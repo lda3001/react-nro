@@ -66,4 +66,32 @@ export const userAPI = {
   },
 };
 
+interface PostDetailResponse {
+  success: boolean;
+  message: string;
+  data: {
+    post: {
+      question_id: number;
+      title: string;
+      content: string;
+      typePost: string;
+      image_post: string;
+      created: string;
+    }
+  }
+}
+
+// Post APIs
+export const postAPI = {
+  getPosts: async () => {
+    const response = await api.get('/api/posts');
+    return response.data;
+  },
+
+  getPostDetail: async (id: number) => {
+    const response = await api.get<PostDetailResponse>(`/api/posts/${id}`);
+    return response.data;
+  },
+};
+
 export default api; 

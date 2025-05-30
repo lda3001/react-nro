@@ -8,6 +8,7 @@ const sequelize = require('./models/index');
 const User = require('./models/User');
 const Character = require('./models/Character');
 const paymentController = require('./controllers/paymentController');
+const postController = require('./controllers/postController');
 
 const app = express();
 app.set('trust proxy', true);
@@ -196,7 +197,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
         role: user.role
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '3h' }
     );
 
     // Update user status
@@ -329,9 +330,7 @@ app.get('/api/user', async (req, res) => {
 
 // Payment routes
 app.get('/api/payment/initiate', async (req, res) => {
-  
   try {
-   
     await paymentController.initiatePayment(req, res);
   } catch (error) {
     res.status(401).json({
@@ -357,6 +356,29 @@ app.get('/api/payment/verify/:transactionId', async (req, res) => {
     res.status(401).json({
       success: false,
       message: 'Token không hợp lệ!'
+    });
+  }
+});
+
+// Post routes
+app.get('/api/posts', async (req, res) => {
+  try {
+    await postController.getPosts(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+app.get('/api/posts/:id', async (req, res) => {
+  try {
+    await postController.getPostDetail(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
     });
   }
 });

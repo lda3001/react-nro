@@ -79,7 +79,7 @@ const CharacterShowcase = () => {
           <div className="md:w-1/3 flex justify-center" style={{ opacity: 1, transform: 'none' }}>
             <div className="relative w-5/6">
               <div className="absolute -inset-4 rounded-full bg-yellow-500 opacity-20 animate-pulse"></div>
-              <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10" style={{ transform: 'none', display: 'block' }}></img>
+              <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10 animate-pulse" style={{ transform: 'none', display: 'block' }}></img>
               <div className="absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg bg-red-500 z-50">
                 <span className="text-white font-bold">{characters.find((c) => c.id === selectedCharacter)?.name}</span>
               </div>
@@ -157,7 +157,7 @@ const CharacterShowcase = () => {
                   <div className="">
                     <h4 className="text-xl text-white mb-4">Chỉ số:</h4>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-gray-700 rounded-lg p-5">
+                      <div className="bg-gray-700 rounded-lg p-4">
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-300 capitalize">power</span>
                           <span className="text-yellow-500">85</span>
@@ -169,7 +169,7 @@ const CharacterShowcase = () => {
                           />
                         </div>
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-5">
+                      <div className="bg-gray-700 rounded-lg p-4">
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-300 capitalize">speed</span>
                           <span className="text-yellow-500">90</span>
@@ -181,7 +181,7 @@ const CharacterShowcase = () => {
                           />
                         </div>
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-5">
+                      <div className="bg-gray-700 rounded-lg p-4">
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-300 capitalize">defense</span>
                           <span className="text-yellow-500">80</span>
@@ -193,7 +193,7 @@ const CharacterShowcase = () => {
                           />
                         </div>
                       </div>
-                      <div className="bg-gray-700 rounded-lg p-5">
+                      <div className="bg-gray-700 rounded-lg p-4">
                         <div className="flex justify-between mb-1">
                           <span className="text-gray-300 capitalize">technique</span>
                           <span className="text-yellow-500">95</span>

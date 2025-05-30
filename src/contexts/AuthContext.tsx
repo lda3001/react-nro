@@ -33,8 +33,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const checkTokenExpiration = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      // Decode the JWT token to get expiration time
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+
+      const { exp } = JSON.parse(jsonPayload);
+      const currentTime = Math.floor(Date.now() / 1000);
+
+      return exp > currentTime;
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+      return false;
+    }
+  };
+
   const fetchUserData = async () => {
     try {
+      if (!checkTokenExpiration()) {
+        logout();
+        return;
+      }
+
       const userData = await authAPI.getCurrentUser() as ApiResponse<User>;
       const userDataParsed = userData.data;
       localStorage.setItem('user', JSON.stringify(userDataParsed));
@@ -51,9 +78,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const token = localStorage.getItem('token');
     
     if (token) {
-      fetchUserData();
+      if (!checkTokenExpiration()) {
+        logout();
+      } else {
+        fetchUserData();
+      }
     }
   }, []);
+
+  // Add interval to check token expiration
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isAuthenticated && !checkTokenExpiration()) {
+        logout();
+      }
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated]);
 
   const login = async (username: string, password: string) => {
     try {
