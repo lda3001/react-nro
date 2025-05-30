@@ -6,19 +6,22 @@ const gameFeatures = [
     id: 1,
     title: 'SIÊU PHẨM DRAGON BALL',
     description: 'Trải nghiệm trò chơi Dragon Ball chất lượng cao với đồ họa tuyệt đẹp và gameplay hấp dẫn.',
-    image: '/images/banner/14-1.png',
+    image: '/images/banners/12-1.png',
+    skill: '/images/skills/gif_gif_Saiyain_VIP.gif',
   },
   {
     id: 2,
-    title: 'CÁC KỸ NĂNG ĐẶC BIỆT',
-    description: 'Sử dụng các kỹ năng đặc biệt như Kamehameha, Final Flash và nhiều kỹ năng khác của nhân vật yêu thích của bạn.',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/f/f1/Goku_Kamehameha_%28Dragon_Ball_Legends_gameplay%29.png',
+    title: 'SĂN BOSS THẢ GA',
+    description: 'Săn lùng và đánh bại các boss thế giới mạnh mẽ để nhận các phần thưởng quý giá.',
+    image: '/images/banners/14-1.png',
+     skill: '/images/skills/gif_supber_kame_VIP.gif',
   },
   {
     id: 3,
-    title: 'CHẾ ĐỘ PVP HẤPẪN',
-    description: 'Đối đầu với người chơi khác trong chế độ PvP để chứng minh bạn là chiến binh mạnh nhất.',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/3/3c/Dokkan-battle-fighting.png',
+    title: 'THÚ CƯỚI ĐA DẠNG ',
+    description: 'Thú cưỡi là một trong những tính năng hấp dẫn của game, với nhiều loại thú cưỡi khác nhau, mỗi loại đều có các kỹ năng và đặc điểm riêng biệt.',
+    image: '/images/banners/7-1.png',
+    skill: '/images/skills/gif_maphongba_VIP.gif',
   },
 ];
 
@@ -101,7 +104,7 @@ const GameFeatures = () => {
                       src={
                         characterImageError
                           ? fallbackCharacterImage
-                          : "https://static.wikia.nocookie.net/dragonball/images/b/b0/GohanBabyRender.png"
+                          : gameFeatures[currentFeature].skill
                       }
                       alt="Character"
                       className="h-24 w-auto transform hover:scale-110 transition-transform"

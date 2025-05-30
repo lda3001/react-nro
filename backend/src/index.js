@@ -10,6 +10,8 @@ const Character = require('./models/Character');
 const paymentController = require('./controllers/paymentController');
 
 const app = express();
+app.set('trust proxy', true);
+
 
 // JWT Secret Key
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
