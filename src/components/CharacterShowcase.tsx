@@ -5,31 +5,20 @@ const characters = [
   {
     id: 1,
     name: 'Son Goku',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/5/5b/Goku_4.jpg',
+    image: '/images/characters/goku.jpg',
     description: 'The main protagonist of the Dragon Ball series and a Saiyan who was sent to Earth as a baby with the mission to destroy it.',
   },
+  
   {
     id: 2,
-    name: 'Vegeta',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/6/6a/VegetaItsOver9000-02.png',
-    description: 'The prince of the fallen Saiyan race and one of the main characters of the series. He is the eldest son of King Vegeta.',
-  },
-  {
-    id: 3,
-    name: 'Broly',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/a/a4/Broly_DBS_Artwork.png',
-    description: 'A powerful Saiyan warrior with immense strength and power level. He is known as the Legendary Super Saiyan.',
-  },
-  {
-    id: 4,
     name: 'Gohan',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/a/ab/GohanSuperSaiyanIINV.png',
+    image: '/images/characters/traidat.png',
     description: 'The elder son of the series\' primary protagonist Goku and his wife Chi-Chi.',
   },
   {
-    id: 5,
+    id: 3,
     name: 'Piccolo',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/f/f2/PiccoloVsAndroid17.png',
+    image: '/images/characters/namek.png',
     description: 'A Namekian who was once Goku\'s enemy but later becomes one of his greatest allies and the mentor of Gohan.',
   },
 ];
@@ -70,15 +59,11 @@ const CharacterShowcase = () => {
 
   return (
     <section
-      className="py-12 bg-gradient-to-r from-[#cc471e] to-[#e1ac31] relative overflow-hidden"
-      style={{
-        backgroundImage: "url('https://ext.same-assets.com/2307704348/1773558153.png')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
+      className="py-12 bg-gradient-to-r  relative overflow-hidden"
+
     >
       <div
-        className="absolute inset-0 bg-gradient-to-r from-[#cc471e] to-[#e1ac31] opacity-80 z-0"
+        className="absolute inset-0 bg-gradient-to-r  opacity-80 z-0"
       ></div>
 
       <div className="container mx-auto px-4 relative z-10">
@@ -87,16 +72,25 @@ const CharacterShowcase = () => {
             HỆ THỐNG NHÂN VẬT
           </span>
         </h2>
-
-        <div className="flex flex-wrap justify-center gap-4 mb-10">
+        <div className='flex md:flex-row flex-col justify-center gap-10'>
+          <div className="md:w-1/3 flex justify-center" style={{ opacity: 1, transform: 'none' }}>
+            <div className="relative w-5/6">
+              <div className="absolute -inset-4 rounded-full bg-yellow-500 opacity-20 animate-pulse"></div>
+              <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10" style={{ transform: 'none', display: 'block' }}></img>
+              <div className="absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg bg-red-500 z-50">
+                <span className="text-white font-bold">Xayda</span>
+              </div>
+            </div>
+          </div>
+          <div className="md:w-2/3 flex flex-col justify-center" style={{ opacity: 1, transform: 'none' }}>
+          <div className="flex flex-wrap justify-center gap-8 mb-10">
           {characters.map((character) => (
             <div
               key={character.id}
-              className={`character-card transform transition-all cursor-pointer ${
-                selectedCharacter === character.id
-                  ? 'scale-110 -rotate-3 z-10'
-                  : 'hover:scale-105 hover:-rotate-2'
-              }`}
+              className={`character-card transform transition-all cursor-pointer ${selectedCharacter === character.id
+                ? 'scale-110 -rotate-3 z-10'
+                : 'hover:scale-105 hover:-rotate-2'
+                }`}
               onClick={() =>
                 setSelectedCharacter(
                   selectedCharacter === character.id ? null : character.id
@@ -170,6 +164,9 @@ const CharacterShowcase = () => {
             </div>
           </div>
         </div>
+          </div>
+        </div>
+        
       </div>
     </section>
   );

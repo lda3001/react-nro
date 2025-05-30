@@ -66,6 +66,12 @@ body {
     bottom: 0;
     left: 0;
 }
+.-inset-4 {
+    top: -1rem;
+    right: -1rem;
+    bottom: -1rem;
+    left: -1rem;
+}
 .btn-yellow {
   transition: all .3s ease;
     background-image: url(/images/buttons/download-button.png);
@@ -75,10 +81,43 @@ body {
     letter-spacing: .5px;
     box-shadow: 0 4px 6px #0003;
 }
+.btn-home {
+  transition: all .3s ease;
+    background-image: url(/images/buttons/TrangChu.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, .3);
+    letter-spacing: .5px;
+    box-shadow: 0 4px 6px #0003;
+}
+.btn-fanpage {
+  transition: all .3s ease;
+    background-image: url(/images/buttons/Fanpage.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, .3);
+    box-shadow: 0 4px 6px #0003;
+
+}   
+.btn-community {
+  transition: all .3s ease;
+    background-image: url(/images/buttons/HoiNhom.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, .3);
+    box-shadow: 0 4px 6px #0003;
+}
+.btn-support {
+  transition: all .3s ease;
+    background-image: url(/images/buttons/DienDan.png);
+    background-size: cover;
+    background-repeat: no-repeat;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, .3);
+    box-shadow: 0 4px 6px #0003;
+}
 .dragon-ball-glow {
     filter: drop-shadow(0 0 5px rgba(255, 165, 0, .7));
 }
-
 .animate-float {
     animation: float 3s ease-in-out infinite;
 }
@@ -108,4 +147,128 @@ body {
     50% {
         box-shadow: 0 0 20px #ffd700cc,0 0 30px #ffa50099
     }
+}
+.dragonball {
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    animation: pulse 2.5s infinite ease-in-out,rotate-random 12s infinite linear;
+    transform-origin: center;
+    filter: drop-shadow(0 0 5px rgba(255,215,0,.6));
+    opacity: .8;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    backface-visibility: visible
+}
+
+.dragonball-1 {
+    background-image: url(/images/icons/ngocrong1.png)
+}
+
+.dragonball-2 {
+    background-image: url(/images/icons/ngocrong2.png)
+}
+
+.dragonball-3 {
+    background-image: url(/images/icons/ngocrong3.png)
+}
+
+.dragonball-4 {
+    background-image: url(/images/icons/ngocrong4.png)
+}
+
+.dragonball-5 {
+    background-image: url(/images/icons/ngocrong5.png)
+}
+
+.dragonball-6 {
+    background-image: url(/images/icons/ngocrong6.png)
+}
+
+.dragonball-7 {
+    background-image: url(/images/icons/ngocrong7.png)
+}
+
+.dragonball:not([class*=dragonball-]) {
+    background-image: url(/images/icons/ngocrong.png)
+}
+
+.dragonball-1 {
+    filter: drop-shadow(0 0 5px rgba(255,215,0,.6))
+}
+
+.dragonball-2 {
+    filter: drop-shadow(0 0 6px rgba(255,165,0,.6))
+}
+
+.dragonball-3 {
+    filter: drop-shadow(0 0 5px rgba(255,140,0,.6))
+}
+
+.dragonball-4 {
+    filter: drop-shadow(0 0 6px rgba(255,100,0,.6))
+}
+
+.dragonball-5 {
+    filter: drop-shadow(0 0 5px rgba(255,80,0,.6))
+}
+
+.dragonball-6 {
+    filter: drop-shadow(0 0 6px rgba(255,50,0,.6))
+}
+
+.dragonball-7 {
+    filter: drop-shadow(0 0 7px rgba(255,0,0,.6))
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: .7
+    }
+
+    50% {
+        transform: scale(1.03);
+        opacity: .8
+    }
+
+    to {
+        transform: scale(1);
+        opacity: .7
+    }
+}
+
+@keyframes rotate-random {
+    0% {
+        transform: rotate(0)
+    }
+
+    25% {
+        transform: rotate(90deg)
+    }
+
+    50% {
+        transform: rotate(180deg)
+    }
+
+    75% {
+        transform: rotate(270deg)
+    }
+
+    to {
+        transform: rotate(360deg)
+    }
+}
+
+.dragonball:nth-child(2n) {
+    animation-duration: 2.5s,14s
+}
+
+.dragonball:nth-child(3n) {
+    animation-duration: 2.5s,16s;
+    animation-direction: normal,reverse
+}
+
+.dragonball:nth-child(4n) {
+    animation-duration: 2.5s,12s
 }

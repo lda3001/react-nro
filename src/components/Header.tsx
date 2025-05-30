@@ -69,19 +69,18 @@ const Header = () => {
               <li className="menu-item">
                 <a
                   href="/"
-                  className="px-6 py-2 btn-yellow text-black font-bold rounded inline-block transform hover:scale-105 transition-transform"
+                  className="px-6 py-2 btn-home text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12" 
                 >
-                  Trang chủ
                 </a>
               </li>
               <li className="menu-item">
                 <a
                   href=""
-                  className="px-6 py-2 btn-yellow text-black font-bold rounded inline-block transform hover:scale-105 transition-transform"
+                  className="px-6 py-2 btn-fanpage text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Fanpage
+                  
                 </a>
               </li>
               <li className="menu-item logo-brand mx-4">
@@ -96,21 +95,21 @@ const Header = () => {
               <li className="menu-item">
                 <a
                   href="https://zalo.me/g/fpattt148"
-                  className="px-6 py-2 btn-yellow text-black font-bold rounded inline-block transform hover:scale-105 transition-transform"
+                  className="px-6 py-2 btn-community  text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12"
                   target="_blank"
                   rel="noopener noreferrer"
-                >
-                  Cộng Đồng
+                    >
+                    
                 </a>
               </li>
               <li className="menu-item">
                 <a
                   href=""
-                  className="px-6 py-2 btn-yellow text-black font-bold rounded inline-block transform hover:scale-105 transition-transform"
+                  className="px-6 py-2 btn-support text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Hỗ Trợ
+                  
                 </a>
               </li>
             </ul>
@@ -139,7 +138,7 @@ const Header = () => {
 
             {/* Mobile menu */}
             {isMenuOpen && (
-              <div className="md:hidden fixed top-24 left-0 w-full bg-[#2a212e] border-t border-[#e1ac31]/30 z-[9999]">
+              <div className="md:hidden fixed top-24 left-0 w-full bg-[#2a212e] border-t border-[#e1ac31]/30 z-[9999] shadow-lg animate-slideDown">
                 <ul className="flex flex-col p-4 space-y-3">
                   <li>
                     <a
@@ -191,7 +190,7 @@ const Header = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="hero-banner w-full h-96 md:h-[500px] bg-2 bg-center bg-cover relative overflow-hidden">
+      <div className="hero-banner w-full h-96 md:h-[500px] h-[500px] bg-2 bg-center bg-cover relative overflow-hidden">
         <div className="container mx-auto h-full flex flex-col items-center justify-center px-4">
           <img
             src="/images/icons/ngocrong.png"
@@ -239,6 +238,10 @@ const Header = () => {
             )}
           </div>
         </div>
+        <div className="absolute bottom-10 left-10 w-16 h-16 dragonball dragonball-7" style={{animationDelay: '0.438104s, 0.219052s', animationDuration: '4.1753s, 17.5338s', transform: 'rotateY(5.69554deg) scale(1.00143)'}}></div>
+        <div className="absolute bottom-20 right-20 w-12 h-12 dragonball dragonball-6" style={{animationDelay: '4.63875s, 2.31938s', animationDuration: '2.25287s, 15.5046s', transform: 'scale(0.99599)'}}></div>
+        <div className="absolute top-20 left-1/4 w-10 h-10 dragonball dragonball-5" style={{animationDelay: '4.65923s, 2.32961s', animationDuration: '4.25497s, 12.7861s', transform: 'scale(1.03191)'}}></div>
+        <div className="absolute top-40 right-1/4 w-14 h-14 dragonball dragonball-4" style={{animationDelay: '0.235047s, 0.117524s', animationDuration: '4.90506s, 17.8606s', transform: 'scale(1.02195)'}}></div>
       </div>
       {/* Register Modal */}
       {isRegisterModalOpen && (

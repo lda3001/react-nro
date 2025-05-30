@@ -6,7 +6,7 @@ const gameFeatures = [
     id: 1,
     title: 'SIÊU PHẨM DRAGON BALL',
     description: 'Trải nghiệm trò chơi Dragon Ball chất lượng cao với đồ họa tuyệt đẹp và gameplay hấp dẫn.',
-    image: 'https://static.wikia.nocookie.net/dragonball/images/0/03/Dragon-Ball-FighterZ_gameplay.png',
+    image: '/images/banner/14-1.png',
   },
   {
     id: 2,
