@@ -328,6 +328,53 @@ app.get('/api/user', async (req, res) => {
   });
 });
 
+//change password
+app.put('/api/changepassword', async (req, res) => {
+  const { oldpassword, newpassword, repassword } = req.body;
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Không tìm thấy token!'  
+    });
+  }
+  const decoded = jwt.verify(token, JWT_SECRET);
+  const user = await User.findByPk(decoded.id);
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'Không tìm thấy người dùng!' 
+    });
+  }
+  if (oldpassword !== user.password) {
+    return res.status(401).json({
+      success: false,
+      message: 'Mật khẩu cũ không đúng!'    
+    });
+  }
+  if (newpassword !== repassword) {
+    return res.status(401).json({
+      success: false,
+      message: 'Mật khẩu mới không khớp!' 
+    });
+  }
+  try {
+    await user.update({
+      password: newpassword
+    });
+  res.json({
+    success: true,  
+    message: 'Đổi mật khẩu thành công!'
+  });
+} catch (error) {
+  console.error('Change password error:', error);
+  res.status(500).json({
+    success: false,   
+    message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+  });
+}
+});
+
 // Payment routes
 app.get('/api/payment/initiate', async (req, res) => {
   try {

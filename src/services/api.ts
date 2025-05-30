@@ -60,8 +60,8 @@ export const userAPI = {
     return response.data;
   },
 
-  changePassword: async (passwordData: { currentPassword: string; newPassword: string }) => {
-    const response = await api.put('/users/change-password', passwordData);
+  changePassword: async (passwordData: { oldpassword: string; newpassword: string ;repassword: string}) => {
+    const response = await api.put('/api/changepassword', passwordData);
     return response.data;
   },
 };

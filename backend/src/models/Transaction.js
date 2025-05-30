@@ -58,11 +58,7 @@ const Transaction = sequelize.define('Transaction', {
     type: DataTypes.DATE,
     allowNull: true
   },
-  transactionCode: {
-    type: DataTypes.STRING,
-    allowNull: true,
-    comment: 'Mã giao dịch từ nội dung chuyển khoản'
-  }
+  
 }, {
   timestamps: true,
   indexes: [
@@ -70,9 +66,7 @@ const Transaction = sequelize.define('Transaction', {
       unique: true,
       fields: ['refNo']
     },
-    {
-      fields: ['transactionCode']
-    }
+   
   ],
   tableName: 'Transactions'
 });

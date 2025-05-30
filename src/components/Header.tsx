@@ -17,6 +17,12 @@ interface DepositFormData {
   amount: number;
 }
 
+interface ChangePasswordFormData {
+  oldpassword: string;
+  newpassword: string;
+  repassword: string;
+}
+
 type PaymentMethod = 'momo' | 'mbank' | null;
 
 const Header = () => {
@@ -24,15 +30,18 @@ const Header = () => {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(null);
   const [showQRCode, setShowQRCode] = useState(false);
   const [error, setError] = useState<string>('');
-  const { login, register, logout, isAuthenticated, user } = useAuth();
+  const { login, register, logout, isAuthenticated, user, changePassword } = useAuth();
 
   const { register: registerForm, handleSubmit: handleRegisterSubmit, formState: { errors: registerErrors }, watch: watchRegister, reset: resetRegisterForm } = useForm<RegisterFormData>();
   const { register: loginForm, handleSubmit: handleLoginSubmit, formState: { errors: loginErrors }, reset: resetLoginForm } = useForm<LoginFormData>();
   const { register: depositForm, handleSubmit: handleDepositSubmit, formState: { errors: depositErrors }, watch: watchDeposit, reset: resetDepositForm } = useForm<DepositFormData>();
+  const { register: changePasswordForm, handleSubmit: handleChangePasswordSubmit, formState: { errors: changePasswordErrors }, watch: watchChangePassword, reset: resetChangePasswordForm } = useForm<ChangePasswordFormData>();
   const password = watchRegister("password");
+  const newPassword = watchChangePassword("newpassword");
 
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
@@ -53,6 +62,19 @@ const Header = () => {
       resetLoginForm();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
+    }
+  };
+
+  const onChangePasswordSubmit = async (data: ChangePasswordFormData) => {
+    try {
+      setError('');
+      // TODO: Implement change password API call
+      await changePassword(data.oldpassword, data.newpassword, data.repassword);
+
+      setIsChangePasswordModalOpen(false);
+      resetChangePasswordForm();
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.');
     }
   };
 
@@ -211,6 +233,12 @@ const Header = () => {
                     onClick={() => setIsDepositModalOpen(true)}
                   >
                     Nạp tiền
+                  </button>
+                  <button 
+                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    onClick={() => setIsChangePasswordModalOpen(true)}
+                  >
+                    Đổi mật khẩu
                   </button>
                   <button 
                     className="btn-yellow px-6 text-lg font-bold rounded-md"
@@ -538,6 +566,94 @@ const Header = () => {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {isChangePasswordModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000]">
+          <div className="bg-[#2a212e] p-6 rounded-lg shadow-lg max-w-sm w-full relative">
+            <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl" onClick={() => {
+              setIsChangePasswordModalOpen(false)
+              resetChangePasswordForm()
+              setError('')
+            }}>
+              ×
+            </button>
+            <h2 className="text-2xl font-bold text-white mb-4 text-center">Đổi mật khẩu</h2>
+            {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
+            <form onSubmit={handleChangePasswordSubmit(onChangePasswordSubmit)}>
+              <div className="mb-4">
+                <label
+                  className="block text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="current-password"
+                >
+                  Mật khẩu hiện tại:
+                </label>
+                <input
+                  {...changePasswordForm("oldpassword", {
+                    required: "Vui lòng nhập mật khẩu hiện tại"
+                  })}
+                  type="password"
+                  id="current-password"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
+                {changePasswordErrors.oldpassword && (
+                  <p className="text-red-500 text-xs mt-1">{changePasswordErrors.oldpassword.message}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label
+                  className="block text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="new-password"
+                >
+                  Mật khẩu mới:
+                </label>
+                <input
+                  {...changePasswordForm("newpassword", {
+                    required: "Vui lòng nhập mật khẩu mới",
+                    minLength: {
+                      value: 6,
+                      message: "Mật khẩu phải có ít nhất 6 ký tự"
+                    }
+                  })}
+                  type="password"
+                  id="new-password"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
+                {changePasswordErrors.newpassword && (
+                  <p className="text-red-500 text-xs mt-1">{changePasswordErrors.newpassword.message}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label
+                  className="block text-gray-300 text-sm font-bold mb-2"
+                  htmlFor="confirm-new-password"
+                >
+                  Xác nhận mật khẩu mới:
+                </label>
+                <input
+                  {...changePasswordForm("repassword", {
+                    required: "Vui lòng xác nhận mật khẩu mới",
+                    validate: (value: string) => value === newPassword || "Mật khẩu không khớp"
+                  })}
+                  type="password"
+                  id="confirm-new-password"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                />
+                {changePasswordErrors.repassword && (
+                  <p className="text-red-500 text-xs mt-1">{changePasswordErrors.repassword.message}</p>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                className="btn-yellow w-full text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              >
+                Đổi mật khẩu
+              </button>
+            </form>
           </div>
         </div>
       )}

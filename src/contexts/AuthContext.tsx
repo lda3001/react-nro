@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, userAPI } from '../services/api';
 
 interface User  {
   id: number;
@@ -25,6 +25,7 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string, repassword: string) => Promise<void>;
   logout: () => void;
+  changePassword: (oldpassword: string, newpassword: string, repassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -129,8 +130,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
+  const changePassword = async (oldpassword: string, newpassword: string, repassword: string) => {
+    try {
+      await userAPI.changePassword({ oldpassword, newpassword, repassword });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, register, logout, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
