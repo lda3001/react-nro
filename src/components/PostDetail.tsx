@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { postAPI } from '../services/api';
+import getImageLink from '../helper/helper';
+
 
 interface PostDetail {
   question_id: number;
@@ -64,7 +66,7 @@ const PostDetail = () => {
         {/* Post Header */}
         <div className="relative">
           <img
-            src={post.image_post}
+            src={getImageLink(post.image_post)}
             alt={post.title}
             className="w-full h-96 object-cover"
           />

@@ -4,11 +4,11 @@ import { authAPI, userAPI } from '../services/api';
 interface User  {
   id: number;
   username: string;
+  role: number;
   vnd: number;
-  character: {
-    id: number;
-    name: string;
-    infochar: string;
+  character?: {
+    name?: string;
+    infochar?: string;
   };
   // Add other user properties as needed
 }

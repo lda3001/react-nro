@@ -81,15 +81,39 @@ interface PostDetailResponse {
   }
 }
 
+interface CreatePostResponse {
+  success: boolean;
+  message: string;
+  data: {
+    post: {
+      question_id: number;
+      title: string;
+      content: string;
+      typePost: string;
+      image_post: string;
+      created: string;
+    }
+  }
+}
+
 // Post APIs
 export const postAPI = {
-  getPosts: async () => {
-    const response = await api.get('/api/posts');
+  getPosts: async (page?: number) => {
+    const response = await api.get(`/api/posts${page ? `?page=${page}` : ''}`);
     return response.data;
   },
 
   getPostDetail: async (id: number) => {
     const response = await api.get<PostDetailResponse>(`/api/posts/${id}`);
+    return response.data;
+  },
+
+  createPost: async (formData: FormData) => {
+    const response = await api.post<CreatePostResponse>('/api/posts', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 };

@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { postAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 interface NewsItem {
   question_id: number;
   title: string;
   typePost: string;
-  link: string;
   content: string;
-  published: string;
+  image_post: string;
+  created: string;
+  STATUS: number;
+  account_id: number;
 }
 
 interface PostResponse {
@@ -26,94 +29,22 @@ const NewsSection = () => {
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchNews = async () => {
       try {
-        // In a real implementation, this would be a fetch from the API
-        // For now, we'll use our mock data
-        // const response = await fetch('/api/news');
-        // const data = await response.json();
-
-        // Using our mock data directly for now
-        // const mockData = [
-        //   {
-        //     title: 'HƯỚNG DẪN TẢI GAME CHO IPHONE',
-        //     category: 'Tin tức',
-        //     content: 'Bước 1: Sau khi download file về, ae vào cài đặt -> cài đặt chung...',
-        //     link: '/huong-dan-tai-game-cho-iphone',
-        //     published: new Date('2025-05-15').toISOString(),
-        //   },
-        //   {
-        //     title: 'Đã có bản mới chính thức, ae tải game đi nhé',
-        //     category: 'Tin tức',
-        //     content: 'Thông báo đã có bản cập nhật mới nhất cho game Bảy Viên Ngọc Rồng...',
-        //     link: '/da-co-ban-moi-chinh-thuc',
-        //     published: new Date('2025-05-10').toISOString(),
-        //   },
-        //   {
-        //     title: 'BÁO LỖI',
-        //     category: 'Tin tức',
-        //     content: 'Nếu gặp lỗi trong quá trình chơi game, vui lòng báo cáo tại đây...',
-        //     link: '/bao-loi',
-        //     published: new Date('2025-05-05').toISOString(),
-        //   },
-        //   {
-        //     title: 'NHẬN QUÀ TẶNG – GIFTCODE',
-        //     category: 'Tin tức',
-        //     content: 'Nhận giftcode miễn phí khi tham gia sự kiện đặc biệt...',
-        //     link: '/giftcode',
-        //     published: new Date('2025-05-01').toISOString(),
-        //   },
-        //   {
-        //     title: 'Đua Top Alpha Test',
-        //     category: 'Tin tức',
-        //     content: 'Tham gia đua top trong giai đoạn Alpha Test để nhận phần thưởng giá trị...',
-        //     link: '/dua-top-alpha-test',
-        //     published: new Date('2025-04-25').toISOString(),
-        //   },
-        //   {
-        //     title: 'Fanpage + Group Facebook',
-        //     category: 'Tin tức',
-        //     content: 'Tham gia cộng đồng Facebook để cập nhật thông tin mới nhất về game...',
-        //     link: '/fanpage-group-facebook',
-        //     published: new Date('2025-04-20').toISOString(),
-        //   },
-        //   {
-        //     title: 'Sự kiện mùa hè 2025',
-        //     category: 'Sự kiện',
-        //     content: 'Tham gia sự kiện mùa hè 2025 với nhiều phần thưởng hấp dẫn...',
-        //     link: '/su-kien-mua-he',
-        //     published: new Date('2025-06-01').toISOString(),
-        //   },
-        //   {
-        //     title: 'Đua top nhận thưởng',
-        //     category: 'Sự kiện',
-        //     content: 'Tham gia đua top để nhận thưởng giá trị từ ngày 01/06 đến 15/06...',
-        //     link: '/dua-top-nhan-thuong',
-        //     published: new Date('2025-06-01').toISOString(),
-        //   },
-        //   {
-        //     title: 'Tính năng mới: Săn Boss thế giới',
-        //     category: 'Tính năng',
-        //     content: 'Giới thiệu tính năng săn Boss thế giới mới trong game...',
-        //     link: '/tinh-nang-san-boss',
-        //     published: new Date('2025-05-20').toISOString(),
-        //   },
-        //   {
-        //     title: 'Cập nhật kỹ năng mới',
-        //     category: 'Tính năng',
-        //     content: 'Cập nhật các kỹ năng mới cho nhân vật trong game...',
-        //     link: '/cap-nhat-ky-nang',
-        //     published: new Date('2025-05-18').toISOString(),
-        //   },
-        // ];
-        const response = await postAPI.getPosts() as PostResponse;
-        const mockData = response.data.posts;
-        
-        // console.log(mockData);
-
-        setNewsData(mockData);
+        setLoading(true);
+        const response = await postAPI.getPosts(currentPage) as PostResponse;
+        if (response.success) {
+          setNewsData(response.data.posts);
+          setTotalPages(response.data.totalPages);
+          setCurrentPage(response.data.currentPage);
+        } else {
+          setError(response.message);
+        }
         setLoading(false);
       } catch (err) {
         setError('Failed to fetch news data');
@@ -122,7 +53,12 @@ const NewsSection = () => {
     };
 
     fetchNews();
-  }, []);
+  }, [currentPage]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setCurrentPage(1);
+  };
 
   const tabs = [
     { id: 'moi-nhat', name: 'Mới nhất' },
@@ -141,7 +77,7 @@ const NewsSection = () => {
     }
 
     if (activeTab === 'moi-nhat') {
-      return newsData.slice(0, 8);
+      return newsData;
     } else if (activeTab === 'tin-tuc') {
       return newsData.filter(item => item.typePost === 'Tin Tức');
     } else if (activeTab === 'su-kien') {
@@ -150,6 +86,10 @@ const NewsSection = () => {
       return newsData.filter(item => item.typePost === 'Tính Năng');
     }
     return [];
+  };
+
+  const handlePageChange = async (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -173,7 +113,7 @@ const NewsSection = () => {
                   <li
                     key={tab.id}
                     className={`cursor-pointer ${activeTab === tab.id ? 'bg-[#cc471e]' : ''}`}
-                    onClick={() => setActiveTab(tab.id)}
+                    onClick={() => handleTabChange(tab.id)}
                   >
                     <a
                       href="#"
@@ -184,6 +124,13 @@ const NewsSection = () => {
                     </a>
                   </li>
                 ))}
+                {user && user.role === 1 && (
+                  <li className="ml-auto">
+                    <a href="/admin/post" className="text-black font-medium px-4 py-3 block hover:bg-opacity-80 transition-colors">
+                      Đăng Bài
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
 
@@ -221,6 +168,26 @@ const NewsSection = () => {
                   {filteredNews().length === 0 && (
                     <div className="text-center py-4 text-gray-500">
                       Không có dữ liệu để hiển thị
+                    </div>
+                  )}
+
+                  {totalPages > 1 && (
+                    <div className="flex justify-end">
+                      <div className="flex items-center space-x-2 mt-4">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => handlePageChange(i + 1)}
+                            className={`px-3 py-1 rounded ${
+                              currentPage === i + 1
+                                ? 'bg-[#e1ac31] text-black'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            } transition-colors`}
+                          >
+                            {i + 1}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

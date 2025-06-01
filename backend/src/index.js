@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
+const path = require('path');
 require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
@@ -11,8 +12,11 @@ const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
 
 const app = express();
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
+// Cấu hình phục vụ file tĩnh
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
+app.use('/images', express.static(path.join(__dirname, '../public/images')));
 
 // JWT Secret Key
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -422,6 +426,44 @@ app.get('/api/posts', async (req, res) => {
 app.get('/api/posts/:id', async (req, res) => {
   try {
     await postController.getPostDetail(req, res);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+// Add new post creation route with admin authentication
+app.post('/api/posts', async (req, res) => {
+  try {
+    // Check if user is admin
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Không tìm thấy token!'
+      });
+    }
+    jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng!' 
+      });
+    }
+
+
+    if (user.role !== 1) {
+      return res.status(403).json({
+        success: false,
+        message: 'Bạn không có quyền thực hiện chức năng này!'
+      });
+    }
+    req.user = user;
+    await postController.createPost(req, res);
   } catch (error) {
     res.status(500).json({
       success: false,

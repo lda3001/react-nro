@@ -1,5 +1,37 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../models/index');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for image upload
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = 'public/uploads';
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('Chỉ chấp nhận file ảnh (JPEG, PNG, GIF)'));
+    }
+    cb(null, true);
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
+}).single('image_post');
 
 const PostQuestion = sequelize.define('PostQuestion', {
   question_id: {
@@ -49,7 +81,7 @@ const PostQuestion = sequelize.define('PostQuestion', {
 class PostController {
   async getPosts(req, res) {
     try {
-      const { page = 1, limit = 10, typePost } = req.query;
+      const { page = 1, limit = 5, typePost } = req.query;
       const offset = (page - 1) * limit;
 
       // Build where clause
@@ -120,6 +152,58 @@ class PostController {
         message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
       });
     }
+  }
+
+  async createPost(req, res) {
+    upload(req, res, async function(err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          success: false,
+          message: err.message
+        });
+      } else if (err) {
+        return res.status(400).json({
+          success: false,
+          message: err.message
+        });
+      }
+
+      try {
+        const { title, content, typePost } = req.body;
+        const image_post = req.file ? `/uploads/${req.file.filename}` : null;
+
+        if (!image_post) {
+          return res.status(400).json({
+            success: false,
+            message: 'Vui lòng tải lên hình ảnh!'
+          });
+        }
+        
+
+        const post = await PostQuestion.create({
+          title,
+          content,
+          typePost,
+          image_post,
+          account_id: req.user.id // Assuming you have user info in req.user
+        });
+
+        res.status(201).json({
+          success: true,
+          message: 'Đăng bài thành công!',
+          data: {
+            post
+          }
+        });
+
+      } catch (error) {
+        console.error('Create post error:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+        });
+      }
+    });
   }
 }
 
