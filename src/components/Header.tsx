@@ -80,7 +80,7 @@ const Header = () => {
 
   return (
     <header className="relative z-[100]">
-      <div className="header-bg w-full h-24 overflow-hidden relative">
+      <div className="header-bg w-full h-full overflow-hidden relative">
         {/* <div className="dragon-balls absolute top-0 left-0 w-full h-full opacity-30">
          
         </div> */}
