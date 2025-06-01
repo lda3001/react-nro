@@ -454,6 +454,10 @@ const Header = () => {
                     setError('Vui lòng chọn phương thức thanh toán');
                     return;
                   }
+                  if(selectedPaymentMethod === 'momo') {
+                    setError('hiện tại chưa hỗ trợ nạp tiền qua MoMo');
+                    return;
+                  }
                   setShowQRCode(true);
                 } catch (err: any) {
                   setError(err.response?.data?.message || 'Nạp tiền thất bại. Vui lòng thử lại.');
@@ -538,7 +542,11 @@ const Header = () => {
                   />
                 </div>
                 <p className="text-gray-300 text-sm mb-4">
+                  Số Tài khoản: {selectedPaymentMethod === 'momo' ? '0934567890' : '3018686868686'}<br />
+                  Chủ Tài khoản: {selectedPaymentMethod === 'momo' ? 'Nguyễn Văn A' : 'Lê Đức Anh'}<br />
+                  Nội dung chuyển khoản: NAPTIEN {user?.id}<br />
                   Số tiền: {watchDeposit('amount')?.toLocaleString('vi-VN')} VND
+
                 </p>
                 <div className="flex justify-center space-x-4">
                   <button
