@@ -106,11 +106,12 @@ const Header = () => {
                 </a>
               </li>
               <li className="menu-item logo-brand mx-4">
-                <a href="/">
+                <a href="/" className="relative">
+                <div className="absolute -inset-1 rounded-full bg-yellow-400 opacity-30 animate-pulse"></div>
                   <img
                     src="/images/logo-main.png"
                     alt="Logo"
-                    className="h-32 w-auto transform -translate-y-1"
+                    className="h-32 w-auto transform -translate-y-1 relative z-10 dragon-ball-glow"
                   />
                 </a>
               </li>
