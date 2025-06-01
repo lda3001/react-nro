@@ -6,7 +6,7 @@ const characters = [
     id: 1,
     name: 'Son Goku',
     image: '/images/characters/goku.png',
-    description: 'The main protagonist of the Dragon Ball series and a Saiyan who was sent to Earth as a baby with the mission to destroy it.',
+    description: '"Goku – chiến binh Saiyan mang trái tim thuần khiết của Trái Đất. Từ một đứa trẻ ngây thơ đến huyền thoại của vũ trụ, anh không ngừng vượt qua giới hạn bản thân để bảo vệ những người mình yêu quý. Với tinh thần bất khuất, niềm đam mê chiến đấu và khát khao mạnh hơn mỗi ngày, Goku đã chạm đến những cảnh giới sức mạnh mà ít ai có thể tưởng tượng."',
     skills: ["Biến Hình", "Tự Phát Nổ", "Galick Gun", "Final Flash" ],
   },
 
@@ -14,14 +14,14 @@ const characters = [
     id: 2,
     name: 'Gohan',
     image: '/images/characters/traidat.png',
-    description: 'The elder son of the series\' primary protagonist Goku and his wife Chi-Chi.',
+    description: '"Gohan là con trai cả của Goku, mang trong mình tiềm năng chiến đấu to lớn ngay từ nhỏ. Dù có bản tính hiền lành, cậu sở hữu sức mạnh bùng nổ khi bảo vệ người thân. Là người đầu tiên đạt trạng thái Super Saiyan 2, Gohan từng khiến cả vũ trụ kinh ngạc với sức mạnh vượt xa tưởng tượng."',
     skills: ["Quả Cầu Kênh Khi", "Kaioken", "Thái dương hạ san", "Kamejoko"],
   },
   {
     id: 3,
     name: 'Piccolo',
     image: '/images/characters/namek.png',
-    description: 'A Namekian who was once Goku\'s enemy but later becomes one of his greatest allies and the mentor of Gohan.',
+    description: '"Piccolo – chiến binh Namek với khí chất lạnh lùng và ý chí thép. Từng là kẻ thù không đội trời chung của Goku, nhưng sau nhiều trận chiến khốc liệt, anh đã trở thành một đồng minh trung thành và người thầy tận tụy. Sở hữu trí tuệ chiến đấu sắc bén cùng năng lực tái sinh đặc trưng của tộc Namek, Piccolo luôn là tấm khiên vững chắc bảo vệ Trái Đất khỏi hiểm họa."',
     skills: ["Makankosappo", "Đẻ Trứng", "Trị Thương", "Multi-Form"],
   },
 ];

@@ -15,7 +15,9 @@ function AppContent() {
   const background = getHours >= 0 && getHours < 8 ? 'background0.jpg' : getHours >= 8 && getHours < 16 ? 'background1.jpg' : 'background2.jpg';
   const { user } = useAuth();
   const gender = user?.character?.infochar ? JSON.parse(user.character.infochar).Gender : '';
-  const backgroundUser = gender ? `background${gender}.jpg` : background;
+  const backgroundUser = gender === 0 || gender === 1 || gender === 2  ? `background${gender}.jpg` : background;
+
+  
 
   return (
     <Router>

@@ -99,7 +99,7 @@ const NewsSection = () => {
           {/* Event/News Image */}
           <div className="md:col-span-1 rounded-lg overflow-hidden shadow-lg bg-white">
             <img
-              src="https://ext.same-assets.com/2307704348/757491588.png"
+              src="https://i.postimg.cc/tJrSDnds/h-h.png"
               alt="Event Banner"
               className="w-full h-full"
             />

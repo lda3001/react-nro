@@ -17,6 +17,7 @@ app.set('trust proxy', 1);
 // Cấu hình phục vụ file tĩnh
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 app.use('/images', express.static(path.join(__dirname, '../public/images')));
+app.use('/UploadImage', express.static(path.join(__dirname, '../public/UploadImage')));
 
 // JWT Secret Key
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
