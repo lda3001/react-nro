@@ -10,6 +10,7 @@ const User = require('./models/User');
 const Character = require('./models/Character');
 const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
+const { log } = require('console');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -472,6 +473,96 @@ app.post('/api/posts', async (req, res) => {
     });
   }
 });
+
+// get ranking power character 
+app.get('/api/ranking/power', async (req, res) => {
+  try {
+    let characters = await Character.findAll({
+      order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
+      limit: 10
+    });
+    characters = characters.map((character, index) => ({
+      rank: index + 1,
+      name: character.Name,
+      power: JSON.parse(character.InfoChar).Power
+    }));
+    res.json({
+      success: true,
+      message: 'Lấy danh sách ranking power character thành công!',
+      data: characters
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+// get ranking recharge character 
+app.get('/api/ranking/recharge', async (req, res) => {
+  try {
+    let users  = await User.findAll({
+      include: [{
+        model: Character,
+        attributes: ['Name']
+      }],
+      order: [['tongnap', 'DESC']],
+      limit: 10,
+      attributes: ['tongnap']
+    });
+    const characters = users.map((u, index) => ({
+      rank: index + 1,
+      name: u.Character?.Name,
+      rechargeAmount: u.tongnap
+    }));
+    
+    // characters = characters.map((character, index) => ({
+    //   rank: index + 1,
+    //   name: character.Name,
+    //   recharge: character.tongnap
+    // }));
+    res.json({
+      success: true,
+      message: 'Lấy danh sách ranking recharge character thành công!',
+      data: characters
+    });
+  } catch (error) {
+    console.error('Error fetching recharge ranking:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+//get ranking event
+app.get('/api/ranking/event', async (req, res) => {
+  try {
+    let characters = await Character.findAll({
+      order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.diemsanbosstet')) AS UNSIGNED)`), 'DESC']],
+      limit: 10
+    });
+    characters = characters.map((character, index) => ({
+      rank: index + 1,
+      name: character.Name,
+      eventPoints: JSON.parse(character.InfoChar).diemsanbosstet
+    }));
+    res.json({
+      success: true,
+      message: 'Lấy danh sách ranking event thành công!',
+      data: characters
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+
+
 
 // Start server
 const PORT = process.env.PORT || 3000;

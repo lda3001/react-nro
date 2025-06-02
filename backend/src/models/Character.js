@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index');
+const User = require('./User');
 
 const Character = sequelize.define('Character', {
   id: {
@@ -134,5 +135,7 @@ const Character = sequelize.define('Character', {
   charset: 'utf8mb4',
   collate: 'utf8mb4_unicode_ci'
 });
+
+
 
 module.exports = Character; 
