@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface RegisterFormData {
   username: string;
@@ -49,6 +51,14 @@ const Header = () => {
       await register(data.username, data.password, data.confirmPassword);
       setIsRegisterModalOpen(false);
       resetRegisterForm();
+      toast.success('Đăng ký thành công!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     }
@@ -60,6 +70,12 @@ const Header = () => {
       await login(data.username, data.password);
       setIsLoginModalOpen(false);
       resetLoginForm();
+      toast.success('Đăng nhập thành công!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.');
     }
@@ -73,6 +89,12 @@ const Header = () => {
 
       setIsChangePasswordModalOpen(false);
       resetChangePasswordForm();
+      toast.success('Đổi mật khẩu thành công!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đổi mật khẩu thất bại. Vui lòng thử lại.');
     }
@@ -80,6 +102,7 @@ const Header = () => {
 
   return (
     <header className="relative z-[100]">
+      <ToastContainer />
       <div className="header-bg w-full h-24 overflow-hidden relative">
         {/* <div className="dragon-balls absolute top-0 left-0 w-full h-full opacity-30">
          

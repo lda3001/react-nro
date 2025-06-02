@@ -20,6 +20,7 @@ interface RankingResponse {
 
 const RankingSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event' | 'task' >('power');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock data for different ranking types
 //   const powerRankingData: RankingPlayer[] = [
@@ -36,6 +37,7 @@ const RankingSection: React.FC = () => {
 
   useEffect(() => {
     const fetchRankingData = async () => {
+      setIsLoading(true);
       try {
         switch (activeTab) {
           case 'power':
@@ -57,6 +59,8 @@ const RankingSection: React.FC = () => {
         }
       } catch (error) {
         console.error(`Error fetching ${activeTab} ranking data:`, error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -191,31 +195,37 @@ const RankingSection: React.FC = () => {
             </div>
           </div>
           
-          <div className="divide-y divide-gray-200">
-            {getCurrentRankingData().map((player) => (
-              <div 
-                key={player.rank} 
-                className="grid grid-cols-3 gap-4 p-4 hover:bg-orange-50 transition-colors duration-200"
-              >
-                <div className="flex justify-center items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${getRankColor(player.rank)}`}>
-                    {player.rank}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {getCurrentRankingData().map((player) => (
+                <div 
+                  key={player.rank} 
+                  className="grid grid-cols-3 gap-4 p-4 hover:bg-orange-50 transition-colors duration-200"
+                >
+                  <div className="flex justify-center items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${getRankColor(player.rank)}`}>
+                      {player.rank}
+                    </div>
                   </div>
+                  <div className="flex items-center justify-center">
+                    <span className="font-medium text-gray-800">{player.name}</span>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <span className="font-semibold text-orange-600">{getValueDisplay(player)}</span>
+                  </div>
+                  {/* <div className="flex items-center justify-center">
+                    <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
+                      Lv.{player.level}
+                    </span>
+                  </div> */}
                 </div>
-                <div className="flex items-center justify-center">
-                  <span className="font-medium text-gray-800">{player.name}</span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <span className="font-semibold text-orange-600">{getValueDisplay(player)}</span>
-                </div>
-                {/* <div className="flex items-center justify-center">
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
-                    Lv.{player.level}
-                  </span>
-                </div> */}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="mt-8 text-center">
