@@ -561,6 +561,30 @@ app.get('/api/ranking/event', async (req, res) => {
   }
 });
 
+//get ranking task
+app.get('/api/ranking/task', async (req, res) => {
+  try {
+    let characters = await Character.findAll({
+      order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC']],
+      limit: 10
+    });
+    characters = characters.map((character, index) => ({
+      rank: index + 1,
+      name: character.Name,
+      taskPoints: JSON.parse(character.InfoChar).Task.Id
+    }));
+    res.json({
+      success: true,
+      message: 'Lấy danh sách ranking task thành công!',
+      data: characters
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
 
 
 

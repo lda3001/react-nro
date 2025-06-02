@@ -9,6 +9,7 @@ interface RankingPlayer {
   power?: number;
   eventPoints?: number;
   rechargeAmount?: number;
+  taskPoints?: number;
 }
 
 interface RankingResponse {
@@ -18,7 +19,7 @@ interface RankingResponse {
 }
 
 const RankingSection: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event'>('power');
+  const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event' | 'task' >('power');
 
   // Mock data for different ranking types
 //   const powerRankingData: RankingPlayer[] = [
@@ -31,6 +32,7 @@ const RankingSection: React.FC = () => {
   const [powerRankingData, setPowerRankingData] = useState<RankingPlayer[]>([]);
   const [rechargeRankingData, setRechargeRankingData] = useState<RankingPlayer[]>([]);
   const [eventRankingData, setEventRankingData] = useState<RankingPlayer[]>([]);
+  const [taskRankingData, setTaskRankingData] = useState<RankingPlayer[]>([]);
 
   useEffect(() => {
     const fetchRankingData = async () => {
@@ -47,6 +49,10 @@ const RankingSection: React.FC = () => {
           case 'event':
             const eventResponse = await rankingAPI.getEventRanking() as RankingResponse;
             setEventRankingData(eventResponse.data);
+            break;
+          case 'task':
+            const taskResponse = await rankingAPI.getTaskRanking() as RankingResponse;
+            setTaskRankingData(taskResponse.data);
             break;
         }
       } catch (error) {
@@ -95,6 +101,8 @@ const RankingSection: React.FC = () => {
         return rechargeRankingData;
       case 'event':
         return eventRankingData;
+      case 'task':
+        return taskRankingData;
     }
   };
 
@@ -106,6 +114,8 @@ const RankingSection: React.FC = () => {
         return ['Hạng', 'Tên', 'Số Tiền Nạp'];
       case 'event':
         return ['Hạng', 'Tên', 'Điểm Sự Kiện'];
+      case 'task':
+        return ['Hạng', 'Tên', 'Nhiệm Vụ'];
     }
   };
 
@@ -117,6 +127,8 @@ const RankingSection: React.FC = () => {
         return `${player.rechargeAmount?.toLocaleString()} VNĐ`;
       case 'event':
         return `${player.eventPoints?.toLocaleString()} Điểm`;
+      case 'task':
+        return `${player.taskPoints?.toLocaleString()} `;
     }
   };
 
@@ -157,6 +169,16 @@ const RankingSection: React.FC = () => {
             }`}
           >
             Top Sự Kiện
+          </button>
+          <button
+            onClick={() => setActiveTab('task')}
+            className={`px-6 py-3 rounded-full font-bold transition-all duration-300 ${
+              activeTab === 'task'
+                ? 'bg-orange-500 text-white transform scale-105'
+                : 'bg-white text-gray-600 hover:bg-orange-100'
+            }`}
+          >
+            Top Nhiệm Vụ
           </button>
         </div>
         
