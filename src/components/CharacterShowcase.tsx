@@ -137,7 +137,7 @@ const CharacterShowcase = () => {
             )}
 
             {/* Character Skills Preview */}
-            <div className="mt-16  rounded-lg overflow-hidden max-w-4xl mx-auto shadow-xl">
+            <div className="lg:mt-16 mt-8  rounded-lg overflow-hidden max-w-4xl mx-auto shadow-xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className=" p-6 flex items-center justify-center">
                   {/* <div className="grid grid-cols-3 gap-2">
