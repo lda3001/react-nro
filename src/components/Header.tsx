@@ -97,7 +97,7 @@ const Header = () => {
               </li>
               <li className="menu-item">
                 <a
-                  href=""
+                  href="https://www.facebook.com/ngocrongfunvietnam/"
                   className="px-6 py-2 btn-fanpage text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -174,7 +174,7 @@ const Header = () => {
                   </li>
                   <li>
                     <a
-                      href=""
+                      href="https://www.facebook.com/ngocrongfunvietnam/"
                       className="px-4 py-2 btn-yellow text-black font-bold rounded block text-center"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -537,14 +537,14 @@ const Header = () => {
                 </h3>
                 <div className="bg-white p-4 rounded-lg mb-4">
                   <img 
-                    src={selectedPaymentMethod === 'momo' ? '/images/payment/momo-qr.png' : `https://img.vietqr.io/image/mbbank-3018686868686-qr_only.jpg?amount=${watchDeposit('amount')}&addInfo=NAPTIEN%20${user?.id}&accountName=LE%20DUC%20ANH`} 
+                    src={selectedPaymentMethod === 'momo' ? '/images/payment/momo-qr.png' : `https://img.vietqr.io/image/mbbank-9666666933333-qr_only.jpg?amount=${watchDeposit('amount')}&addInfo=NAPTIEN%20${user?.id}&accountName=NGUYEN%20NAM%20KHANH`} 
                     alt="QR Code" 
                     className="w-48 h-48 mx-auto"
                   />
                 </div>
                 <p className="text-gray-300 text-sm mb-4">
-                  Số Tài khoản: {selectedPaymentMethod === 'momo' ? '0934567890' : '3018686868686'}<br />
-                  Chủ Tài khoản: {selectedPaymentMethod === 'momo' ? 'Nguyễn Văn A' : 'Lê Đức Anh'}<br />
+                  Số Tài khoản: {selectedPaymentMethod === 'momo' ? '0879999950' : '9666666933333'}<br />
+                  Chủ Tài khoản: {selectedPaymentMethod === 'momo' ? 'Nguyễn Nam Khánh' : 'Nguyễn Nam Khánh'}<br />
                   Nội dung chuyển khoản: NAPTIEN {user?.id}<br />
                   Số tiền: {watchDeposit('amount')?.toLocaleString('vi-VN')} VND
 
