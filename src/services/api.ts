@@ -132,6 +132,10 @@ export const rankingAPI = {
     const response = await api.get('/api/ranking/event');
     return response.data;
   },
+  getTaskRanking: async () => {
+    const response = await api.get('/api/ranking/task');
+    return response.data;
+  },
 };
 
 export default api; 
