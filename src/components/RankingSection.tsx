@@ -133,7 +133,7 @@ const RankingSection: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 bg-gradient-to-b from-orange-50 to-orange-100  rounded-lg overflow-hidden shadow-lg">
+    <div className="container mx-auto px-4 py-12 bg-gradient-to-b  rounded-lg overflow-hidden shadow-lg">
       <div className="max-w-4xl p-4 mx-auto">
         <h2 className="text-4xl font-bold text-center mb-2 text-orange-600">Bảng Xếp Hạng</h2>
         <p className="text-center text-gray-600 mb-8">Top những người chơi mạnh nhất</p>

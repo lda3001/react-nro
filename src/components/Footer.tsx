@@ -1,6 +1,6 @@
 const Footer = () => {
   return (
-    <footer className="bg-[#222] py-6 text-center text-white">
+    <footer className="bg-[#222] py-6 text-center text-white bottom-0">
       <div className="container mx-auto px-4">
         <div className="mb-4">
           <a
@@ -29,7 +29,12 @@ const Footer = () => {
         <p className="mb-2">Bảy Viên Ngọc Rồng 2025</p>
         <p className="text-sm opacity-70">Chơi game quá 180 phút sẽ có hại cho sức khỏe</p>
       </div>
+      <audio id="background-music" autoPlay loop>
+      <source src="/audio/background-music.mp3" type="audio/mpeg" />
+    </audio>
     </footer>
+    
+    
   );
 };
 
