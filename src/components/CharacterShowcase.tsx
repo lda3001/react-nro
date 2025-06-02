@@ -8,6 +8,7 @@ const characters = [
     image: '/images/characters/goku.png',
     description: 'The main protagonist of the Dragon Ball series and a Saiyan who was sent to Earth as a baby with the mission to destroy it.',
     skills: ["Biến Hình", "Tự Phát Nổ", "Galick Gun", "Final Flash" ],
+    color: "bg-red-500"
   },
 
   {
@@ -16,6 +17,7 @@ const characters = [
     image: '/images/characters/traidat.png',
     description: 'The elder son of the series\' primary protagonist Goku and his wife Chi-Chi.',
     skills: ["Quả Cầu Kênh Khi", "Kaioken", "Thái dương hạ san", "Kamejoko"],
+    color: "bg-blue-500"
   },
   {
     id: 3,
@@ -23,6 +25,7 @@ const characters = [
     image: '/images/characters/namek.png',
     description: 'A Namekian who was once Goku\'s enemy but later becomes one of his greatest allies and the mentor of Gohan.',
     skills: ["Makankosappo", "Đẻ Trứng", "Trị Thương", "Multi-Form"],
+    color: "bg-green-500"
   },
 ];
 
@@ -80,7 +83,7 @@ const CharacterShowcase = () => {
             <div className="relative w-5/6">
               <div className="absolute -inset-4 rounded-full bg-yellow-500 opacity-20 animate-pulse"></div>
               <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10 animate-pulse" style={{ transform: 'none', display: 'block' }}></img>
-              <div className="absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg bg-red-500 z-50">
+              <div className={`absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg character ${characters.find((c) => c.id === selectedCharacter)?.color} z-50`}>
                 <span className="text-white font-bold">{characters.find((c) => c.id === selectedCharacter)?.name}</span>
               </div>
             </div>
