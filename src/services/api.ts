@@ -118,4 +118,20 @@ export const postAPI = {
   },
 };
 
+// Ranking APIs
+export const rankingAPI = {
+  getPowerRanking: async () => {
+    const response = await api.get('/api/ranking/power');
+    return response.data;
+  },
+  getRechargeRanking: async () => {
+    const response = await api.get('/api/ranking/recharge');
+    return response.data;
+  },
+  getEventRanking: async () => {
+    const response = await api.get('/api/ranking/event');
+    return response.data;
+  },
+};
+
 export default api; 
