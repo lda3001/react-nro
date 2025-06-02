@@ -11,6 +11,7 @@ const Character = require('./models/Character');
 const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
 const { log } = require('console');
+const TaskTemplate = require('./models/TaskTemplate');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -564,20 +565,45 @@ app.get('/api/ranking/event', async (req, res) => {
 app.get('/api/ranking/task', async (req, res) => {
   try {
     let characters = await Character.findAll({
-      order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC']],
+      order: [
+        [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC'],
+        [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Index')) AS UNSIGNED)`), 'DESC'],
+        [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Count')) AS UNSIGNED)`), 'DESC']
+      ],
       limit: 10
     });
-    characters = characters.map((character, index) => ({
-      rank: index + 1,
-      name: character.Name,
-      taskPoints: JSON.parse(character.InfoChar).Task.Id
+    
+    //lấy tên task
+    
+
+    characters = await Promise.all(characters.map(async (character, index) => {
+      const info = JSON.parse(character.InfoChar);
+      const gender = info?.Gender;
+      const taskId = info?.Task?.Id;
+      const taskIndex = info?.Task?.Index;
+    
+      const taskTemplate = await TaskTemplate.findOne({
+        where: { id: taskId, gender: gender }
+      });
+    
+      // Giả sử taskTemplate.tasks là mảng các task con
+      
+
+      return {
+        rank: index + 1,
+        name: character.Name,
+        taskPoints: taskTemplate?.dataValues?.name || null
+      };
     }));
+    
     res.json({
       success: true,
       message: 'Lấy danh sách ranking task thành công!',
       data: characters
     });
   } catch (error) {
+    console.log('Error fetching task ranking:', error);
+    
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'

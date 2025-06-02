@@ -55,7 +55,7 @@ const PostDetail = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" style={{marginTop: '50px', marginBottom: '50px'}}>
         <div className="absolute inset-0 overflow-hidden z-0 opacity-40">
         <div className="absolute top-10 left-10 w-20 h-20 dragonball dragonball-3" style={{ animationDelay: '4.11616s, 2.05808s', animationDuration: '4.547s, 10.5565s', transform: 'scale(0.952235)' }}></div>
         <div className="absolute bottom-20 right-10 w-16 h-16 dragonball dragonball-1" style={{ animationDelay: '4.87931s, 2.43966s', animationDuration: '4.64595s, 13.8452s', transform: 'scale(1.04823)' }}></div>
@@ -88,7 +88,7 @@ const PostDetail = () => {
         </div>
 
         {/* Post Content */}
-        <div className="p-6">
+        <div className="p-6" style={{minHeight: '300px'}}>
           <div className="prose max-w-none">
             <div dangerouslySetInnerHTML={{ __html: post.content }} />
           </div>

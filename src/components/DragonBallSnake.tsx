@@ -2,28 +2,73 @@ import React, { useEffect, useRef, useState } from 'react';
 
 const BALL_COUNT = 7;
 const TRAIL_COUNT = 10;
+const BASE_SPEED = 0.2; // Tốc độ cơ bản
+
+// Hàm easing để tạo chuyển động mượt mà hơn
+const easeOutQuad = (t: number) => t * (2 - t);
 
 const DragonBallSnake = () => {
   const [positions, setPositions] = useState(Array(BALL_COUNT).fill({ x: 0, y: 0 }));
   const [trailPositions, setTrailPositions] = useState(Array(TRAIL_COUNT).fill({ x: 0, y: 0 }));
   const animationRef = useRef<number>();
+  const mousePos = useRef({ x: 0, y: 0 });
+  const lastUpdate = useRef(Date.now());
 
   const handleMouseMove = (e: MouseEvent) => {
-    const newPos = { x: e.clientX , y: e.clientY };
+    mousePos.current = { x: e.clientX, y: e.clientY };
+  };
+
+  const animate = () => {
+    const now = Date.now();
+    const deltaTime = Math.min((now - lastUpdate.current) / 16, 2); // Giới hạn delta time để tránh nhảy đột ngột
+    lastUpdate.current = now;
 
     setPositions((prev) => {
-      const updated = [newPos, ...prev.slice(0, BALL_COUNT - 1)];
-      return updated;
+      const newPositions = [...prev];
+      for (let i = 0; i < BALL_COUNT; i++) {
+        const targetPos = i === 0 ? mousePos.current : newPositions[i - 1];
+        // Tốc độ giảm dần theo thứ tự viên ngọc
+        const speed = BASE_SPEED * (1 - (i * 0.1));
+        const dx = targetPos.x - newPositions[i].x;
+        const dy = targetPos.y - newPositions[i].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Áp dụng easing function
+        const easedSpeed = easeOutQuad(speed * deltaTime);
+        
+        newPositions[i] = {
+          x: newPositions[i].x + dx * easedSpeed,
+          y: newPositions[i].y + dy * easedSpeed
+        };
+      }
+      return newPositions;
     });
 
     setTrailPositions((prev) => {
-      const updated = [newPos, ...prev.slice(0, TRAIL_COUNT - 1)];
-      return updated;
+      const newTrail = [...prev];
+      newTrail[0] = positions[0];
+      for (let i = 1; i < TRAIL_COUNT; i++) {
+        const targetPos = newTrail[i - 1];
+        const speed = BASE_SPEED * 0.8 * (1 - (i * 0.08));
+        const dx = targetPos.x - newTrail[i].x;
+        const dy = targetPos.y - newTrail[i].y;
+        
+        const easedSpeed = easeOutQuad(speed * deltaTime);
+        
+        newTrail[i] = {
+          x: newTrail[i].x + dx * easedSpeed,
+          y: newTrail[i].y + dy * easedSpeed
+        };
+      }
+      return newTrail;
     });
+
+    animationRef.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
     window.addEventListener('mousemove', handleMouseMove);
+    animationRef.current = requestAnimationFrame(animate);
    
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
