@@ -9,7 +9,7 @@ import RankingSection from '../components/RankingSection';
 const HomePage = () => {
   return (
     <div className="">
-      <DragonBallSnake />
+      
       <DownloadSection />
       <NewsSection />
       <RankingSection />

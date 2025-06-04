@@ -28,9 +28,9 @@ api.interceptors.request.use(
 
 // Auth APIs
 export const authAPI = {
-  register: async (userData: { username: string; password: string; repassword: string }) => {
+  register: async (userData: { username: string; password: string; repassword: string; server_id: number }) => {
     const response = await api.post('/api/register', userData);
-    return response.data;
+    return response.data as any;
   },
 
   login: async (credentials: { username: string; password: string }) => {
@@ -49,6 +49,11 @@ export const authAPI = {
 
   getCurrentUser: async () => {
     const response = await api.get('/api/user');
+    return response.data;
+  },
+
+  getListServer: async () => {
+    const response = await api.get('/api/list-server');
     return response.data;
   },
 };
@@ -137,5 +142,7 @@ export const rankingAPI = {
     return response.data;
   },
 };
+
+
 
 export default api; 

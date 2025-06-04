@@ -83,7 +83,7 @@ const CharacterShowcase = () => {
             <div className="relative w-5/6">
               <div className="absolute -inset-4 rounded-full bg-yellow-500 opacity-20 animate-pulse"></div>
               <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10 animate-pulse" style={{ transform: 'none', display: 'block' }}></img>
-              <div className={`absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg character ${characters.find((c) => c.id === selectedCharacter)?.color} z-50`}>
+              <div className={`absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg character ${characters.find((c) => c.id === selectedCharacter)?.color} z-5`}>
                 <span className="text-white font-bold">{characters.find((c) => c.id === selectedCharacter)?.name}</span>
               </div>
             </div>

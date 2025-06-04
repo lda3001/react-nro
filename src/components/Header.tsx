@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import DragonBallSnake from './DragonBallSnake';
+import { authAPI } from '../services/api';
+
 
 interface RegisterFormData {
   username: string;
   password: string;
   confirmPassword: string;
+  serverId: number;
 }
 
 interface LoginFormData {
@@ -36,6 +40,7 @@ const Header = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>(null);
   const [showQRCode, setShowQRCode] = useState(false);
   const [error, setError] = useState<string>('');
+  const [servers, setServers] = useState<Array<{id: number, name: string}>>([]);
   const { login, register, logout, isAuthenticated, user, changePassword } = useAuth();
 
   const { register: registerForm, handleSubmit: handleRegisterSubmit, formState: { errors: registerErrors }, watch: watchRegister, reset: resetRegisterForm } = useForm<RegisterFormData>();
@@ -45,10 +50,29 @@ const Header = () => {
   const password = watchRegister("password");
   const newPassword = watchChangePassword("newpassword");
 
+  // Fetch servers when register modal opens
+  useEffect(() => {
+    console.log(isRegisterModalOpen);
+    if (isRegisterModalOpen) {
+      fetchServers();
+    }
+  }, [isRegisterModalOpen]);
+
+  const fetchServers = async () => {
+    try {
+      const response = await authAPI.getListServer() as any;
+      if (response.success) {
+        setServers(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching servers:', error);
+    }
+  };
+
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
       setError('');
-      await register(data.username, data.password, data.confirmPassword);
+      await register(data.username, data.password, data.confirmPassword, data.serverId);
       setIsRegisterModalOpen(false);
       resetRegisterForm();
       toast.success('Đăng ký thành công!', {
@@ -107,6 +131,7 @@ const Header = () => {
         {/* <div className="dragon-balls absolute top-0 left-0 w-full h-full opacity-30">
          
         </div> */}
+        <DragonBallSnake />
 
         <div className="container mx-auto px-4 h-full flex items-center justify-between">
           <nav className="w-full">
@@ -373,6 +398,31 @@ const Header = () => {
               />
               {registerErrors.confirmPassword && (
                 <p className="text-red-500 text-xs mt-1">{registerErrors.confirmPassword.message}</p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label
+                className="block text-gray-300 text-sm font-bold mb-2"
+                htmlFor="server"
+              >
+                Chọn Server:
+              </label>
+              <select
+                {...registerForm("serverId", {
+                  required: "Vui lòng chọn server"
+                })}
+                id="server"
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+              >
+                <option value="">Chọn server</option>
+                {servers.map((server) => (
+                  <option key={server.id} value={server.id} >
+                    {server.name}
+                  </option>
+                ))}
+              </select>
+              {registerErrors.serverId && (
+                <p className="text-red-500 text-xs mt-1">{registerErrors.serverId.message}</p>
               )}
             </div>
 
