@@ -197,7 +197,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     // Check if user is locked
-    if (user.lock === 1) {
+    if (user.ban === 1) {
       return res.status(403).json({
         success: false,
         message: 'Tài khoản của bạn đã bị khóa!'
