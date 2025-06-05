@@ -157,12 +157,12 @@ class PaymentController {
             }
 
             // Update user balance
-            if(user.tongnap === 0){
+  
               await user.update({
                 vnd: user.vnd + parseFloat(transaction.amount),
                 tongnap: user.tongnap + parseFloat(transaction.amount)
               });
-          }
+         
           
 
             // Mark transaction as processed
