@@ -20,6 +20,7 @@ interface RankingResponse {
 
 const RankingSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event' | 'task' >('power');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock data for different ranking types
 //   const powerRankingData: RankingPlayer[] = [
@@ -36,6 +37,7 @@ const RankingSection: React.FC = () => {
 
   useEffect(() => {
     const fetchRankingData = async () => {
+      setIsLoading(true);
       try {
         switch (activeTab) {
           case 'power':
@@ -57,6 +59,8 @@ const RankingSection: React.FC = () => {
         }
       } catch (error) {
         console.error(`Error fetching ${activeTab} ranking data:`, error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -133,16 +137,16 @@ const RankingSection: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 bg-gradient-to-b  rounded-lg overflow-hidden shadow-lg">
-      <div className="max-w-4xl p-4 mx-auto">
-        <h2 className="text-4xl font-bold text-center mb-2 text-orange-600">Bảng Xếp Hạng</h2>
-        <p className="text-center text-gray-600 mb-8">Top những người chơi mạnh nhất</p>
+    <div className="container mx-auto px-2 sm:px-4 py-6 sm:py-12 bg-gradient-to-b rounded-lg overflow-hidden shadow-lg">
+      <div className="max-w-4xl p-2 sm:p-4 mx-auto">
+        <h2 className="text-2xl sm:text-4xl font-bold text-center mb-1 sm:mb-2 text-orange-600">Bảng Xếp Hạng</h2>
+        <p className="text-center text-sm sm:text-base text-gray-600 mb-4 sm:mb-8">Top những người chơi mạnh nhất</p>
 
         {/* Tabs */}
-        <div className="flex justify-center space-x-4 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4 sm:mb-8">
           <button
             onClick={() => setActiveTab('power')}
-            className={`px-6 py-3 rounded-full font-bold transition-all duration-300 ${
+            className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-full font-bold transition-all duration-300 ${
               activeTab === 'power'
                 ? 'bg-orange-500 text-white transform scale-105'
                 : 'bg-white text-gray-600 hover:bg-orange-100'
@@ -152,7 +156,7 @@ const RankingSection: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('recharge')}
-            className={`px-6 py-3 rounded-full font-bold transition-all duration-300 ${
+            className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-full font-bold transition-all duration-300 ${
               activeTab === 'recharge'
                 ? 'bg-orange-500 text-white transform scale-105'
                 : 'bg-white text-gray-600 hover:bg-orange-100'
@@ -162,7 +166,7 @@ const RankingSection: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('event')}
-            className={`px-6 py-3 rounded-full font-bold transition-all duration-300 ${
+            className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-full font-bold transition-all duration-300 ${
               activeTab === 'event'
                 ? 'bg-orange-500 text-white transform scale-105'
                 : 'bg-white text-gray-600 hover:bg-orange-100'
@@ -172,7 +176,7 @@ const RankingSection: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('task')}
-            className={`px-6 py-3 rounded-full font-bold transition-all duration-300 ${
+            className={`px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-full font-bold transition-all duration-300 ${
               activeTab === 'task'
                 ? 'bg-orange-500 text-white transform scale-105'
                 : 'bg-white text-gray-600 hover:bg-orange-100'
@@ -182,45 +186,45 @@ const RankingSection: React.FC = () => {
           </button>
         </div>
         
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
-          <div className="bg-gradient-to-r from-orange-500 to-red-600 p-4">
-            <div className="grid grid-cols-3 gap-4 text-white font-bold">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+          <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 sm:p-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 text-white font-bold text-sm sm:text-base">
               {getColumnHeaders().map((header, index) => (
                 <div key={index} className="text-center">{header}</div>
               ))}
             </div>
           </div>
           
-          <div className="divide-y divide-gray-200">
-            {getCurrentRankingData().map((player) => (
-              <div 
-                key={player.rank} 
-                className="grid grid-cols-3 gap-4 p-4 hover:bg-orange-50 transition-colors duration-200"
-              >
-                <div className="flex justify-center items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${getRankColor(player.rank)}`}>
-                    {player.rank}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8 sm:py-12">
+              <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-t-2 border-b-2 border-orange-500"></div>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-200">
+              {getCurrentRankingData().map((player) => (
+                <div 
+                  key={player.rank} 
+                  className="grid grid-cols-3 gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-orange-50 transition-colors duration-200"
+                >
+                  <div className="flex justify-center items-center">
+                    <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base ${getRankColor(player.rank)}`}>
+                      {player.rank}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <span className="font-medium text-gray-800 text-sm sm:text-base truncate">{player.name}</span>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <span className="font-semibold text-orange-600 text-sm sm:text-base">{getValueDisplay(player)}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-center">
-                  <span className="font-medium text-gray-800">{player.name}</span>
-                </div>
-                <div className="flex items-center justify-center">
-                  <span className="font-semibold text-orange-600">{getValueDisplay(player)}</span>
-                </div>
-                {/* <div className="flex items-center justify-center">
-                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
-                    Lv.{player.level}
-                  </span>
-                </div> */}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="mt-8 text-center">
-            
-          <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full transition-colors duration-300 transform hover:scale-105" > 
+        <div className="mt-4 sm:mt-8 text-center">
+          <button className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 sm:py-3 px-6 sm:px-8 rounded-full transition-colors duration-300 transform hover:scale-105 text-sm sm:text-base"> 
             Xem Thêm
           </button>
         </div>

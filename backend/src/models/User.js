@@ -39,9 +39,13 @@ const User = sequelize.define('User', {
     }
   },
   character: {
-    type: DataTypes.BIGINT,
+    type: DataTypes.INTEGER.UNSIGNED,
     allowNull: true,
-    defaultValue: 0
+    defaultValue: 0,
+    references: {
+      model: 'character',
+      key: 'id'
+    }
   },
   lock: {
     type: DataTypes.TINYINT,

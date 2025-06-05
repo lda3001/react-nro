@@ -13,10 +13,11 @@ class PaymentController {
   }
 
   // Hàm trích xuất userId từ nội dung chuyển khoản
-  extractUserId(description) {
-    // Mẫu regex để tìm userId sau NAPTIEN (ví dụ: NAPTIEN 123)
-    const regex = /NAPTIEN\s+(\d+)/i;
-    const match = description.match(regex);
+  extractUserId(description) {   
+    const normalized = description.replace(/\s+/g, '');
+    
+    const match = normalized.match(/NAPTIEN(\d+)/i);
+  
     return match ? parseInt(match[1]) : null;
   }
 
@@ -156,10 +157,13 @@ class PaymentController {
             }
 
             // Update user balance
-            await user.update({
-              vnd: user.vnd + parseFloat(transaction.amount),
-              tongnap: user.tongnap + parseFloat(transaction.amount)
-            });
+            if(user.tongnap === 0){
+              await user.update({
+                vnd: user.vnd + parseFloat(transaction.amount),
+                tongnap: user.tongnap + parseFloat(transaction.amount)
+              });
+          }
+          
 
             // Mark transaction as processed
             await transaction.update({

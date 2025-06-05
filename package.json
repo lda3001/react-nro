@@ -26,6 +26,7 @@
     "react-hook-form": "^7.56.4",
     "react-quill": "^2.0.0",
     "react-router-dom": "^7.6.0",
+    "react-toastify": "^11.0.5",
     "tailwindcss-animate": "^1.0.7",
     "tough-cookie": "^5.1.2"
   },

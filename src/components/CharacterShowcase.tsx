@@ -8,6 +8,7 @@ const characters = [
     image: '/images/characters/goku.png',
     description: '"Goku – chiến binh Saiyan mang trái tim thuần khiết của Trái Đất. Từ một đứa trẻ ngây thơ đến huyền thoại của vũ trụ, anh không ngừng vượt qua giới hạn bản thân để bảo vệ những người mình yêu quý. Với tinh thần bất khuất, niềm đam mê chiến đấu và khát khao mạnh hơn mỗi ngày, Goku đã chạm đến những cảnh giới sức mạnh mà ít ai có thể tưởng tượng."',
     skills: ["Biến Hình", "Tự Phát Nổ", "Galick Gun", "Final Flash" ],
+    color: "bg-red-500"
   },
 
   {
@@ -16,6 +17,7 @@ const characters = [
     image: '/images/characters/traidat.png',
     description: '"Gohan là con trai cả của Goku, mang trong mình tiềm năng chiến đấu to lớn ngay từ nhỏ. Dù có bản tính hiền lành, cậu sở hữu sức mạnh bùng nổ khi bảo vệ người thân. Là người đầu tiên đạt trạng thái Super Saiyan 2, Gohan từng khiến cả vũ trụ kinh ngạc với sức mạnh vượt xa tưởng tượng."',
     skills: ["Quả Cầu Kênh Khi", "Kaioken", "Thái dương hạ san", "Kamejoko"],
+    color: "bg-blue-500"
   },
   {
     id: 3,
@@ -23,6 +25,7 @@ const characters = [
     image: '/images/characters/namek.png',
     description: '"Piccolo – chiến binh Namek với khí chất lạnh lùng và ý chí thép. Từng là kẻ thù không đội trời chung của Goku, nhưng sau nhiều trận chiến khốc liệt, anh đã trở thành một đồng minh trung thành và người thầy tận tụy. Sở hữu trí tuệ chiến đấu sắc bén cùng năng lực tái sinh đặc trưng của tộc Namek, Piccolo luôn là tấm khiên vững chắc bảo vệ Trái Đất khỏi hiểm họa."',
     skills: ["Makankosappo", "Đẻ Trứng", "Trị Thương", "Multi-Form"],
+    color: "bg-green-500"
   },
 ];
 
@@ -80,7 +83,7 @@ const CharacterShowcase = () => {
             <div className="relative w-5/6">
               <div className="absolute -inset-4 rounded-full bg-yellow-500 opacity-20 animate-pulse"></div>
               <img src={characters.find((c) => c.id === selectedCharacter)?.image || fallbackCharacterImage} alt="Vegeta" className="md:h-80 h-64 w-full object-contain relative z-10 dragon-ball-glow md:mt-10 animate-pulse" style={{ transform: 'none', display: 'block' }}></img>
-              <div className="absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg bg-red-500 z-50">
+              <div className={`absolute bottom-0 left-0 right-0 text-center py-2 rounded-b-lg character ${characters.find((c) => c.id === selectedCharacter)?.color} z-5`}>
                 <span className="text-white font-bold">{characters.find((c) => c.id === selectedCharacter)?.name}</span>
               </div>
             </div>
@@ -134,7 +137,7 @@ const CharacterShowcase = () => {
             )}
 
             {/* Character Skills Preview */}
-            <div className="mt-16  rounded-lg overflow-hidden max-w-4xl mx-auto shadow-xl">
+            <div className="lg:mt-16 mt-8  rounded-lg overflow-hidden max-w-4xl mx-auto shadow-xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className=" p-6 flex items-center justify-center">
                   {/* <div className="grid grid-cols-3 gap-2">

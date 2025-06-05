@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI, userAPI } from '../services/api';
 
+import { toast } from 'react-toastify';
+
 interface User  {
   id: number;
   username: string;
@@ -23,9 +25,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, repassword: string) => Promise<void>;
+  register: (username: string, password: string, confirmPassword: string, serverId: number) => Promise<void>;
   logout: () => void;
-  changePassword: (oldpassword: string, newpassword: string, repassword: string) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -115,10 +117,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (username: string, password: string, repassword: string) => {
+  const register = async (username: string, password: string, confirmPassword: string, serverId: number) => {
     try {
-      await authAPI.register({ username, password, repassword });
-    } catch (error) {
+      const response = await authAPI.register({
+        username,
+        password,
+        repassword: confirmPassword,
+        server_id: serverId
+      });
+      if (response.data.success) {
+        toast.success('Đăng ký thành công!');
+      }
+    } catch (error: any) {
       throw error;
     }
   };
@@ -130,9 +140,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(false);
   };
 
-  const changePassword = async (oldpassword: string, newpassword: string, repassword: string) => {
+  const changePassword = async (oldPassword: string, newPassword: string, confirmPassword: string) => {
     try {
-      await userAPI.changePassword({ oldpassword, newpassword, repassword });
+      await userAPI.changePassword({ oldpassword: oldPassword, newpassword: newPassword, repassword: confirmPassword });
     } catch (error) {
       throw error;
     }

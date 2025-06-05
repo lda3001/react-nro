@@ -8,9 +8,9 @@ require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
 const Character = require('./models/Character');
+const ListServer = require('./models/ListServer')(sequelize, sequelize.Sequelize.DataTypes);
 const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
-const { log } = require('console');
 const TaskTemplate = require('./models/TaskTemplate');
 
 const app = express();
@@ -70,9 +70,17 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Sync database
-sequelize.sync({ alter: true })
-  .then(() => {
-    console.log('Database synced');
+sequelize.sync({ alter: true, force: false })
+  .then(async () => {
+    // Sync Character model first
+    await ListServer.sync({ alter: true });
+    await Character.sync({ alter: true });
+    // Then sync User model
+    await User.sync({ alter: true });
+    // Finally sync other models
+    
+    await TaskTemplate.sync({ alter: true });
+    console.log('Database synced successfully');
   })
   .catch((err) => {
     console.error('Error syncing database:', err);
@@ -86,7 +94,7 @@ app.get('/', (req, res) => {
 // Registration endpoint with specific rate limiting
 app.post('/api/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, repassword, ip_register } = req.body;
+    const { username, password, repassword, server_id } = req.body;
 
     // Validate password match
     try {
@@ -110,14 +118,24 @@ app.post('/api/register', registerLimiter, async (req, res) => {
       });
     }
 
-    // Hash password
-   
+    // Check if server exists
+    const server = await ListServer.findOne({
+      where: { id: server_id }
+    });
+
+    if (!server) {
+      return res.status(400).json({
+        success: false,
+        message: 'Server không tồn tại!'
+      });
+    }
 
     // Create new user
     const user = await User.create({
       username,
       password: password,
-      ip_register: ip_register || req.ip
+      ip_register: req.ip,
+      sv_port: server.Port
     });
 
     res.status(201).json({
@@ -180,7 +198,7 @@ app.post('/api/login', loginLimiter, async (req, res) => {
     }
 
     // Check if user is locked
-    if (user.lock === 1) {
+    if (user.ban === 1) {
       return res.status(403).json({
         success: false,
         message: 'Tài khoản của bạn đã bị khóa!'
@@ -332,6 +350,28 @@ app.get('/api/user', async (req, res) => {
         infochar: character.InfoChar || '',
       }
     }
+  });
+});
+
+//get list server
+app.get('/api/list-server', async (req, res) => {
+  const listServer = await ListServer.findAll({
+    where: {
+      Status: 1
+    },
+    order: [
+      ['id', 'ASC']
+    ]
+  });
+  
+  const listServerData = listServer.map(server => ({
+    id: server.id,
+    name: server.Name,
+  }));
+  res.json({
+    success: true,
+    message: 'Lấy danh sách server thành công!',
+    data: listServerData
   });
 });
 
