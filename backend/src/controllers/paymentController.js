@@ -13,12 +13,28 @@ class PaymentController {
   }
 
   // Hàm trích xuất userId từ nội dung chuyển khoản
-  extractUserId(description) {   
-    const normalized = description.replace(/\s+/g, '');
+  extractUserId(description) {
+    // foR bANK ACB
     
-    const match = normalized.match(/NAPTIEN(\d+)/i);
-  
-    return match ? parseInt(match[1]) : null;
+    const lines = description.split(/\s+/); // Tách theo từng từ
+
+    for (let i = 0; i < lines.length; i++) {
+      if (/^NAPTIEN$/i.test(lines[i])) {
+      
+        const next = lines[i + 1];
+        if (/^\d+$/.test(next)) {
+          return `NAPTIEN ${next}`;
+        }
+      }
+    }
+
+    const merged = description.replace(/\s+/g, '');
+    const match = merged.match(/NAPTIEN(\d{4,})/i);
+    if (match) {
+      return `NAPTIEN ${match[1]}`;
+    }
+
+    return null;
   }
 
   // Kiểm tra session còn hợp lệ không
@@ -91,7 +107,7 @@ class PaymentController {
           try {
             // Extract userId from description
             const userId = this.extractUserId(transaction.description);
-            
+
             if (!userId) {
               console.log('Không tìm thấy userId trong nội dung chuyển khoản:', transaction.description);
               continue;
@@ -157,13 +173,22 @@ class PaymentController {
             }
 
             // Update user balance
+<<<<<<< HEAD
   
+=======
+            if (user.tongnap === 0) {
+>>>>>>> faa9257a47dbabd99f82fd67719f2b117476eb2f
               await user.update({
                 vnd: user.vnd + parseFloat(transaction.amount),
                 tongnap: user.tongnap + parseFloat(transaction.amount)
               });
+<<<<<<< HEAD
          
           
+=======
+            }
+
+>>>>>>> faa9257a47dbabd99f82fd67719f2b117476eb2f
 
             // Mark transaction as processed
             await transaction.update({
