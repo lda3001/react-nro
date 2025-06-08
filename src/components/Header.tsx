@@ -52,7 +52,6 @@ const Header = () => {
 
   // Fetch servers when register modal opens
   useEffect(() => {
-    console.log(isRegisterModalOpen);
     if (isRegisterModalOpen) {
       fetchServers();
     }

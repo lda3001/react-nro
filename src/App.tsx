@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NewsSection from './components/NewsSection';
 import PostDetail from './components/PostDetail';
 import AdminPostPage from './pages/AdminPostPage';
+import Milestone from './pages/Milestone';
 
 function AppContent() {
   const getHours = new Date().getHours();
@@ -36,6 +37,7 @@ function AppContent() {
               <Route path="/" element={<HomePage />} />
               <Route path="/news/:id" element={<PostDetail />} />
               <Route path="/admin/post" element={<AdminPostPage />} />
+              <Route path="/milestone" element={<Milestone />} />
             </Routes>
           </main>
           <Footer />

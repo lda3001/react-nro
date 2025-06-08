@@ -12,6 +12,10 @@ const ListServer = require('./models/ListServer')(sequelize, sequelize.Sequelize
 const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
 const TaskTemplate = require('./models/TaskTemplate');
+const { Op } = require('sequelize');
+
+// Import associations
+require('./models/associations');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -332,6 +336,7 @@ app.get('/api/user', async (req, res) => {
       id: 0,
       name: '',
       infochar: ''
+
     }
   }
     
@@ -344,6 +349,8 @@ app.get('/api/user', async (req, res) => {
       username: user.username,
       role: user.role,
       vnd: user.vnd,
+      tongnap : user.tongnap,
+      milestone: user.mocnap,
       character: {
         id: character.id || 0,
         name: character.Name || '',
@@ -518,9 +525,21 @@ app.post('/api/posts', async (req, res) => {
 // get ranking power character 
 app.get('/api/ranking/power', async (req, res) => {
   try {
+    const isTopNewbie = req.query.isTopNewbie === 'true';
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
-      limit: 10
+      limit: 10,
+      include: [{
+        model: User,
+        attributes: ['created_at'],
+        ...(isTopNewbie && {
+          where: {
+            created_at: {
+              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+            }
+          }
+        })
+      }]
     });
     characters = characters.map((character, index) => ({
       rank: index + 1,
@@ -533,6 +552,7 @@ app.get('/api/ranking/power', async (req, res) => {
       data: characters
     });
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
@@ -543,26 +563,26 @@ app.get('/api/ranking/power', async (req, res) => {
 // get ranking recharge character 
 app.get('/api/ranking/recharge', async (req, res) => {
   try {
-    let users  = await User.findAll({
+    const isTopNewbie = req.query.isTopNewbie === 'true';
+    let users = await User.findAll({
       include: [{
         model: Character,
         attributes: ['Name']
       }],
+      where: isTopNewbie ? {
+        created_at: {
+          [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+        }
+      } : {},
       order: [['tongnap', 'DESC']],
       limit: 10,
       attributes: ['tongnap']
     });
     const characters = users.map((u, index) => ({
       rank: index + 1,
-      name: u.Character?.Name,
+      name: u.Character?.Name || 'Chưa Tạo Nhân Vật',
       rechargeAmount: u.tongnap
     }));
-    
-    // characters = characters.map((character, index) => ({
-    //   rank: index + 1,
-    //   name: character.Name,
-    //   recharge: character.tongnap
-    // }));
     res.json({
       success: true,
       message: 'Lấy danh sách ranking recharge character thành công!',
@@ -580,9 +600,21 @@ app.get('/api/ranking/recharge', async (req, res) => {
 //get ranking event
 app.get('/api/ranking/event', async (req, res) => {
   try {
+    const isTopNewbie = req.query.isTopNewbie === 'true';
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.diemsanbosstet')) AS UNSIGNED)`), 'DESC']],
-      limit: 10
+      limit: 10,
+      include: [{
+        model: User,
+        attributes: ['created_at'],
+        ...(isTopNewbie && {
+          where: {
+            created_at: {
+              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+            }
+          }
+        })
+      }]
     });
     characters = characters.map((character, index) => ({
       rank: index + 1,
@@ -605,18 +637,27 @@ app.get('/api/ranking/event', async (req, res) => {
 //get ranking task
 app.get('/api/ranking/task', async (req, res) => {
   try {
+    const isTopNewbie = req.query.isTopNewbie === 'true';
     let characters = await Character.findAll({
       order: [
         [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC'],
         [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Index')) AS UNSIGNED)`), 'DESC'],
         [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Count')) AS UNSIGNED)`), 'DESC']
       ],
-      limit: 10
+      limit: 10,
+      include: [{
+        model: User,
+        attributes: ['created_at'],
+        ...(isTopNewbie && {
+          where: {
+            created_at: {
+              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+            }
+          }
+        })
+      }]
     });
     
-    //lấy tên task
-    
-
     characters = await Promise.all(characters.map(async (character, index) => {
       const info = JSON.parse(character.InfoChar);
       const gender = info?.Gender;
@@ -627,9 +668,6 @@ app.get('/api/ranking/task', async (req, res) => {
         where: { id: taskId, gender: gender }
       });
     
-      // Giả sử taskTemplate.tasks là mảng các task con
-      
-
       return {
         rank: index + 1,
         name: character.Name,
@@ -644,15 +682,12 @@ app.get('/api/ranking/task', async (req, res) => {
     });
   } catch (error) {
     console.log('Error fetching task ranking:', error);
-    
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
     });
   }
 });
-
-
 
 // Start server
 const PORT = process.env.PORT || 3000;

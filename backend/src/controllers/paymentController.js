@@ -23,7 +23,7 @@ class PaymentController {
       
         const next = lines[i + 1];
         if (/^\d+$/.test(next)) {
-          return `NAPTIEN ${next}`;
+          return `${next}`;
         }
       }
     }
@@ -31,7 +31,7 @@ class PaymentController {
     const merged = description.replace(/\s+/g, '');
     const match = merged.match(/NAPTIEN(\d{4,})/i);
     if (match) {
-      return `NAPTIEN ${match[1]}`;
+      return `${match[1]}`;
     }
 
     return null;
@@ -140,7 +140,7 @@ class PaymentController {
                 refNo: transaction.refNo,
                 accountNo: transaction.accountNo,
                 postingDate: postingDate,
-                transactionDate: transactionDate,
+                transactionDate: transactionDate.toISOString(),
                 amount: transaction.creditAmount,
                 description: transaction.description,
                 type: transaction.transactionType,
@@ -173,22 +173,12 @@ class PaymentController {
             }
 
             // Update user balance
-<<<<<<< HEAD
-  
-=======
-            if (user.tongnap === 0) {
->>>>>>> faa9257a47dbabd99f82fd67719f2b117476eb2f
+
               await user.update({
                 vnd: user.vnd + parseFloat(transaction.amount),
                 tongnap: user.tongnap + parseFloat(transaction.amount)
               });
-<<<<<<< HEAD
-         
-          
-=======
-            }
 
->>>>>>> faa9257a47dbabd99f82fd67719f2b117476eb2f
 
             // Mark transaction as processed
             await transaction.update({
