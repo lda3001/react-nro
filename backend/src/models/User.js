@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('./index');
-const Character = require('./Character');
 
 const User = sequelize.define('User', {
   id: {
@@ -143,7 +142,6 @@ const User = sequelize.define('User', {
   ]
 });
 
-User.belongsTo(Character, { foreignKey: 'character', targetKey: 'id' });
 // Thêm phương thức validate password match
 User.validatePasswordMatch = function(password, repassword) {
   if (password !== repassword) {

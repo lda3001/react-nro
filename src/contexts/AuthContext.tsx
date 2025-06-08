@@ -8,6 +8,8 @@ interface User  {
   username: string;
   role: number;
   vnd: number;
+  tongnap: number;
+  milestone: string;
   character?: {
     name?: string;
     infochar?: string;

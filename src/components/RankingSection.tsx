@@ -21,6 +21,7 @@ interface RankingResponse {
 const RankingSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event' | 'task' >('power');
   const [isLoading, setIsLoading] = useState(false);
+  const [isTopNewbie, setIsTopNewbie] = useState(false);
 
   // Mock data for different ranking types
 //   const powerRankingData: RankingPlayer[] = [
@@ -41,19 +42,19 @@ const RankingSection: React.FC = () => {
       try {
         switch (activeTab) {
           case 'power':
-            const powerResponse = await rankingAPI.getPowerRanking() as RankingResponse;
+            const powerResponse = await rankingAPI.getPowerRanking(isTopNewbie) as RankingResponse;
             setPowerRankingData(powerResponse.data);
             break;
           case 'recharge':
-            const rechargeResponse = await rankingAPI.getRechargeRanking() as RankingResponse;
+            const rechargeResponse = await rankingAPI.getRechargeRanking(isTopNewbie) as RankingResponse;
             setRechargeRankingData(rechargeResponse.data);
             break;
           case 'event':
-            const eventResponse = await rankingAPI.getEventRanking() as RankingResponse;
+            const eventResponse = await rankingAPI.getEventRanking(isTopNewbie) as RankingResponse;
             setEventRankingData(eventResponse.data);
             break;
           case 'task':
-            const taskResponse = await rankingAPI.getTaskRanking() as RankingResponse;
+            const taskResponse = await rankingAPI.getTaskRanking(isTopNewbie) as RankingResponse;
             setTaskRankingData(taskResponse.data);
             break;
         }
@@ -65,7 +66,7 @@ const RankingSection: React.FC = () => {
     };
     
     fetchRankingData();
-  }, [activeTab]);
+  }, [activeTab, isTopNewbie]);
   
 
 //   const rechargeRankingData: RankingPlayer[] = [
@@ -141,6 +142,20 @@ const RankingSection: React.FC = () => {
       <div className="max-w-4xl p-2 sm:p-4 mx-auto">
         <h2 className="text-2xl sm:text-4xl font-bold text-center mb-1 sm:mb-2 text-orange-600">Bảng Xếp Hạng</h2>
         <p className="text-center text-sm sm:text-base text-gray-600 mb-4 sm:mb-8">Top những người chơi mạnh nhất</p>
+
+        {/* Toggle Button */}
+        <div className="flex justify-center mb-4">
+          <button
+            onClick={() => setIsTopNewbie(!isTopNewbie)}
+            className={`px-4 py-2 rounded-full font-bold transition-all duration-300 ${
+              isTopNewbie
+                ? 'bg-green-500 text-white'
+                : 'bg-blue-500 text-white'
+            }`}
+          >
+            {isTopNewbie ? 'Top Tân Thủ' : 'Tất Cả'}
+          </button>
+        </div>
 
         {/* Tabs */}
         <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-4 sm:mb-8">

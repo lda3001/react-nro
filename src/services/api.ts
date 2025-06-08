@@ -125,24 +125,22 @@ export const postAPI = {
 
 // Ranking APIs
 export const rankingAPI = {
-  getPowerRanking: async () => {
-    const response = await api.get('/api/ranking/power');
+  getPowerRanking: async (isTopNewbie: boolean = false) => {
+    const response = await api.get(`/api/ranking/power${isTopNewbie ? '?isTopNewbie=true' : ''}`);
     return response.data;
   },
-  getRechargeRanking: async () => {
-    const response = await api.get('/api/ranking/recharge');
+  getRechargeRanking: async (isTopNewbie: boolean = false) => {
+    const response = await api.get(`/api/ranking/recharge${isTopNewbie ? '?isTopNewbie=true' : ''}`);
     return response.data;
   },
-  getEventRanking: async () => {
-    const response = await api.get('/api/ranking/event');
+  getEventRanking: async (isTopNewbie: boolean = false) => {
+    const response = await api.get(`/api/ranking/event${isTopNewbie ? '?isTopNewbie=true' : ''}`);
     return response.data;
   },
-  getTaskRanking: async () => {
-    const response = await api.get('/api/ranking/task');
+  getTaskRanking: async (isTopNewbie: boolean = false) => {
+    const response = await api.get(`/api/ranking/task${isTopNewbie ? '?isTopNewbie=true' : ''}`);
     return response.data;
   },
 };
-
-
 
 export default api; 
