@@ -27,7 +27,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, password: string, confirmPassword: string, serverId: number) => Promise<void>;
+  register: (username: string, password: string, confirmPassword: string, serverId: number, token: string) => Promise<void>;
   logout: () => void;
   changePassword: (oldPassword: string, newPassword: string, confirmPassword: string) => Promise<void>;
 }
@@ -119,13 +119,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (username: string, password: string, confirmPassword: string, serverId: number) => {
+  const register = async (username: string, password: string, confirmPassword: string, serverId: number, token: string) => {
     try {
       const response = await authAPI.register({
         username,
         password,
         repassword: confirmPassword,
-        server_id: serverId
+        server_id: serverId,
+        token
       });
       if (response.data.success) {
         toast.success('Đăng ký thành công!');

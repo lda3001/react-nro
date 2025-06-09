@@ -47,15 +47,20 @@ const Milestone= () => {
         console.log(`Receiving milestone: ${milestone}`);
     };
     if(!user) {
-        return <div>Vui lòng đăng nhập để xem thông tin</div>;
+        return (
+            <div className="flex flex-col justify-center items-center min-h-[calc(100vh-700px)]">
+              <h1 className="text-4xl font-bold">401 - Unauthorized</h1>
+              <p className="text-2xl">Vui lòng đăng nhập để xem thông tin</p>
+            </div>
+          );
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-b py-3">
             <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
                 <div className="text-center mb-6 sm:mb-12">
-                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 sm:mb-4 text-white">Mốc Nhận Thưởng</h1>
-                    <p className="text-base sm:text-lg text-gray-600">
+                    <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4 text-white">Mốc Nhận Thưởng</h1>
+                    <p className="text-base sm:text-lg text-white">
                         Tổng nạp hiện tại: <span className="font-semibold text-green-600">{formatCurrency(user.tongnap)}</span>
                     </p>
                 </div>

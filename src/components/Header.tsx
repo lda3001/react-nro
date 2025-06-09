@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
@@ -6,6 +6,16 @@ import 'react-toastify/dist/ReactToastify.css';
 import DragonBallSnake from './DragonBallSnake';
 import { authAPI } from '../services/api';
 
+declare global {
+  interface Window {
+    turnstile: {
+      render: (container: HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+      }) => void;
+    };
+  }
+}
 
 interface RegisterFormData {
   username: string;
@@ -50,6 +60,30 @@ const Header = () => {
   const password = watchRegister("password");
   const newPassword = watchChangePassword("newpassword");
 
+  const widgetRef = useRef(null);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    // Load Turnstile script
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.turnstile && widgetRef.current && !token) {
+        window.turnstile.render(widgetRef.current, {
+          sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || 'YOUR_SITE_KEY',
+          callback: setToken,
+        });
+        clearInterval(interval);
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, [token]);
   // Fetch servers when register modal opens
   useEffect(() => {
     if (isRegisterModalOpen) {
@@ -71,9 +105,14 @@ const Header = () => {
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
       setError('');
-      await register(data.username, data.password, data.confirmPassword, data.serverId);
+      if (!token) {
+        setError('Vui lòng xác nhận CAPTCHA');
+        return;
+      }
+      await register(data.username, data.password, data.confirmPassword, data.serverId, token);
       setIsRegisterModalOpen(false);
       resetRegisterForm();
+      setToken('');
       toast.success('Đăng ký thành công!', {
         position: "top-right",
         autoClose: 3000,
@@ -425,9 +464,14 @@ const Header = () => {
               )}
             </div>
 
+            <div className="mb-4">
+              <div ref={widgetRef} className="flex justify-center"></div>
+            </div>
+
             <button
               type="submit"
               className="btn-yellow w-full text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              disabled={!token}
             >
               Đăng ký
             </button>

@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const axios = require('axios');
 require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
@@ -97,7 +98,23 @@ app.get('/', (req, res) => {
 // Registration endpoint with specific rate limiting
 app.post('/api/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, repassword, server_id } = req.body;
+    const { username, password, repassword, server_id , token} = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không tìm thấy token!'
+      });
+    }
+    const verifyRes = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      new URLSearchParams({
+        secret: process.env.TURNSTILE_SECRET_KEY || 'YOUR_SECRET_KEY',
+        response: token,
+      }));
+  
+    if (!verifyRes.data.success) {
+      return res.status(403).send('Captcha không hợp lệ');
+    }
 
     // Validate password match
     try {
@@ -681,6 +698,33 @@ app.get('/api/ranking/task', async (req, res) => {
     });
   } catch (error) {
     console.log('Error fetching task ranking:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+app.get('/api/milestone', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Không tìm thấy token!'
+      });
+    }
+    jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng!'
+      });
+    }
+
+  } catch (error) {
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
