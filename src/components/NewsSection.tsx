@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { postAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
 interface NewsItem {
   question_id: number;
@@ -126,9 +127,9 @@ const NewsSection = () => {
                 ))}
                 {user && user.role === 1 && (
                   <li className="ml-auto">
-                    <a href="/admin/post" className="text-black font-medium px-4 py-3 block hover:bg-opacity-80 transition-colors">
+                    <Link to="/admin/post" className="text-black font-medium px-4 py-3 block hover:bg-opacity-80 transition-colors">
                       Đăng Bài
-                    </a>
+                    </Link>
                   </li>
                 )}
               </ul>

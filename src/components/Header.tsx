@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DragonBallSnake from './DragonBallSnake';
 import { authAPI } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
 
 declare global {
   interface Window {
@@ -299,7 +300,7 @@ const Header = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="hero-banner w-full h-96 md:h-[500px] h-[500px] bg-2 bg-center bg-cover relative overflow-hidden">
+      <div className="hero-banner w-full md:h-[500px] h-[600px] bg-2 bg-center bg-cover relative overflow-hidden">
         <div className="container mx-auto h-full flex flex-col items-center justify-center px-4">
           <img
             src="/images/icons/ngocrong.png"
@@ -314,21 +315,27 @@ const Header = () => {
                 <span className="text-white">Xin chào, {user?.username}</span>
                 <span className="text-white">VND: {user?.vnd}</span>
                 <span className="text-white">Nhân vật: {user?.character?.name || 'Chưa tạo nhân vật'}</span>
-                <div className="flex space-x-4 mt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={() => setIsDepositModalOpen(true)}
                   >
                     Nạp tiền
                   </button>
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={() => setIsChangePasswordModalOpen(true)}
                   >
                     Đổi mật khẩu
                   </button>
+                  <Link 
+                    to="/milestone" 
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto text-center"
+                  >
+                    Mốc nạp
+                  </Link>
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={logout}
                   >
                     Đăng xuất

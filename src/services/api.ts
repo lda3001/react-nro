@@ -143,4 +143,12 @@ export const rankingAPI = {
   },
 };
 
+export const milestoneAPI = {
+  
+  receiveMilestone: async (milestone: number) => {
+    const response = await api.post('/api/milestone', { milestone });
+    return response.data;
+  },
+};
+
 export default api; 
