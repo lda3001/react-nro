@@ -16,25 +16,22 @@ class PaymentController {
   extractUserId(description) {
     // foR bANK ACB
     
-    const lines = description.split(/\s+/); // Tách theo từng từ
+     const normalizedText = description.replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const idx = normalizedText.toUpperCase().indexOf("NAPTIEN");
+  if (idx === -1) return null;
 
-    for (let i = 0; i < lines.length; i++) {
-      if (/^NAPTIEN$/i.test(lines[i])) {
-      
-        const next = lines[i + 1];
-        if (/^\d+$/.test(next)) {
-          return `${next}`;
-        }
-      }
+  const after = normalizedText.slice(idx + 7); // phần sau từ NAPTIEN
+  const tokens = after.split(/[^0-9]+/); // tách theo ký tự không phải số
+
+  let digits = "";
+  for (const token of tokens) {
+    if (token) {
+      digits += token;
+      if (digits.length >= 5) break;
     }
+  }
 
-    const merged = description.replace(/\s+/g, '');
-    const match = merged.match(/NAPTIEN(\d{4,})/i);
-    if (match) {
-      return `${match[1]}`;
-    }
-
-    return null;
+  return digits.length >= 5 ? digits.slice(0, 5) : null;
   }
 
   // Kiểm tra session còn hợp lệ không
