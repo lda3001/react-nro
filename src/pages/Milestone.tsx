@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { milestoneAPI } from '../services/api';
+import { toast } from 'react-toastify';
+
 interface Milestone {
     milestone: number;
     received: boolean;
@@ -42,27 +45,49 @@ const Milestone= () => {
         }).format(amount);
     };
 
-    const handleReceiveMilestone = (milestone: number) => {
+    const handleReceiveMilestone = async (milestone: number) => {
         // TODO: Implement the receive milestone logic
-        console.log(`Receiving milestone: ${milestone}`);
+        try {
+            const response = await milestoneAPI.receiveMilestone(milestone) as any;
+            if(response.success) {
+                toast.success(response.message);
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                toast.error(response.message);
+            }
+        } catch (error: any) {
+            if(error.response.data.error) {
+                toast.error(error.response.data.error);
+            } else {
+                toast.error("Có lỗi xảy ra, vui lòng thử lại sau!");
+            }
+        }
+        
     };
     if(!user) {
-        return <div>Vui lòng đăng nhập để xem thông tin</div>;
+        return (
+            <div className="flex flex-col justify-center items-center min-h-[calc(100vh-700px)]">
+              <h1 className="text-4xl font-bold">401 - Unauthorized</h1>
+              <p className="text-2xl">Vui lòng đăng nhập để xem thông tin</p>
+            </div>
+          );
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-b py-3">
             <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
                 <div className="text-center mb-6 sm:mb-12">
-                    <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2 sm:mb-4 text-white">Mốc Nhận Thưởng</h1>
-                    <p className="text-base sm:text-lg text-gray-600">
+                    <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4 text-white">Mốc Nhận Thưởng</h1>
+                    <p className="text-base sm:text-lg text-white">
                         Tổng nạp hiện tại: <span className="font-semibold text-green-600">{formatCurrency(user.tongnap)}</span>
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8">
                     {JSON.parse(user.milestone).map((milestone: Milestone) => {
-                        const isAchieved = user.tongnap > milestone.milestone;
+                        const isAchieved = user.tongnap >= milestone.milestone;
                         const status = isAchieved ? (milestone.received ? 'Received' : 'Receive') : 'Not Achieved';
                         const buttonImage = isAchieved
                             ? (milestone.received ? '/UploadImage/danhan.png' : '/UploadImage/nhan.png')

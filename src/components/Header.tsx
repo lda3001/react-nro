@@ -1,11 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import DragonBallSnake from './DragonBallSnake';
 import { authAPI } from '../services/api';
+import { Link, useNavigate } from 'react-router-dom';
 
+declare global {
+  interface Window {
+    turnstile: {
+      render: (container: HTMLElement, options: {
+        sitekey: string;
+        callback: (token: string) => void;
+      }) => void;
+    };
+  }
+}
 
 interface RegisterFormData {
   username: string;
@@ -50,6 +61,30 @@ const Header = () => {
   const password = watchRegister("password");
   const newPassword = watchChangePassword("newpassword");
 
+  const widgetRef = useRef(null);
+  const [token, setToken] = useState('');
+
+  useEffect(() => {
+    // Load Turnstile script
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (window.turnstile && widgetRef.current && !token) {
+        window.turnstile.render(widgetRef.current, {
+          sitekey: import.meta.env.VITE_TURNSTILE_SITE_KEY || 'YOUR_SITE_KEY',
+          callback: setToken,
+        });
+        clearInterval(interval);
+      }
+    }, 300);
+    return () => clearInterval(interval);
+  }, [token]);
   // Fetch servers when register modal opens
   useEffect(() => {
     if (isRegisterModalOpen) {
@@ -71,9 +106,14 @@ const Header = () => {
   const onRegisterSubmit = async (data: RegisterFormData) => {
     try {
       setError('');
-      await register(data.username, data.password, data.confirmPassword, data.serverId);
+      if (!token) {
+        setError('Vui lòng xác nhận CAPTCHA');
+        return;
+      }
+      await register(data.username, data.password, data.confirmPassword, data.serverId, token);
       setIsRegisterModalOpen(false);
       resetRegisterForm();
+      setToken('');
       toast.success('Đăng ký thành công!', {
         position: "top-right",
         autoClose: 3000,
@@ -260,7 +300,7 @@ const Header = () => {
       </div>
 
       {/* Hero Banner */}
-      <div className="hero-banner w-full h-96 md:h-[500px] h-[500px] bg-2 bg-center bg-cover relative overflow-hidden">
+      <div className="hero-banner w-full md:h-[500px] h-[600px] bg-2 bg-center bg-cover relative overflow-hidden">
         <div className="container mx-auto h-full flex flex-col items-center justify-center px-4">
           <img
             src="/images/icons/ngocrong.png"
@@ -275,21 +315,27 @@ const Header = () => {
                 <span className="text-white">Xin chào, {user?.username}</span>
                 <span className="text-white">VND: {user?.vnd}</span>
                 <span className="text-white">Nhân vật: {user?.character?.name || 'Chưa tạo nhân vật'}</span>
-                <div className="flex space-x-4 mt-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={() => setIsDepositModalOpen(true)}
                   >
                     Nạp tiền
                   </button>
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={() => setIsChangePasswordModalOpen(true)}
                   >
                     Đổi mật khẩu
                   </button>
+                  <Link 
+                    to="/milestone" 
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto text-center"
+                  >
+                    Mốc nạp
+                  </Link>
                   <button 
-                    className="btn-yellow px-6 text-lg font-bold rounded-md"
+                    className="btn-yellow px-4 md:px-6 py-2 text-base md:text-lg font-bold rounded-md w-full md:w-auto"
                     onClick={logout}
                   >
                     Đăng xuất
@@ -425,9 +471,14 @@ const Header = () => {
               )}
             </div>
 
+            <div className="mb-4">
+              <div ref={widgetRef} className="flex justify-center"></div>
+            </div>
+
             <button
               type="submit"
               className="btn-yellow w-full text-black font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+              disabled={!token}
             >
               Đăng ký
             </button>

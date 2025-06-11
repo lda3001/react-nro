@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const axios = require('axios');
 require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
@@ -13,6 +14,8 @@ const paymentController = require('./controllers/paymentController');
 const postController = require('./controllers/postController');
 const TaskTemplate = require('./models/TaskTemplate');
 const { Op } = require('sequelize');
+const Milestone = require('./models/Milestone');
+const ItemOptions = require('./models/ItemOptions');
 
 // Import associations
 require('./models/associations');
@@ -81,6 +84,12 @@ sequelize.sync({ alter: true, force: false })
     await Character.sync({ alter: true });
     // Then sync User model
     await User.sync({ alter: true });
+    await Milestone.sync({ alter: true });
+    //if not have table milestones add table milestones
+    if (!await sequelize.query('SHOW TABLES LIKE "milestones"', { type: sequelize.QueryTypes.SELECT })) {
+      await sequelize.query('CREATE TABLE milestones (id INT AUTO_INCREMENT PRIMARY KEY, amount INT NOT NULL, reward JSON NOT NULL)');
+      console.log('Table milestones created successfully');
+    }
     // Finally sync other models
     
     await TaskTemplate.sync({ alter: true });
@@ -98,7 +107,23 @@ app.get('/', (req, res) => {
 // Registration endpoint with specific rate limiting
 app.post('/api/register', registerLimiter, async (req, res) => {
   try {
-    const { username, password, repassword, server_id } = req.body;
+    const { username, password, repassword, server_id , token} = req.body;
+
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: 'Không tìm thấy token!'
+      });
+    }
+    const verifyRes = await axios.post('https://challenges.cloudflare.com/turnstile/v0/siteverify',
+      new URLSearchParams({
+        secret: process.env.TURNSTILE_SECRET_KEY || 'YOUR_SECRET_KEY',
+        response: token,
+      }));
+  
+    if (!verifyRes.data.success) {
+      return res.status(403).send('Captcha không hợp lệ');
+    }
 
     // Validate password match
     try {
@@ -682,6 +707,135 @@ app.get('/api/ranking/task', async (req, res) => {
     });
   } catch (error) {
     console.log('Error fetching task ranking:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+app.post('/api/milestone', async (req, res) => {
+  try {
+    const { milestone } = req.body;
+    if (!milestone) {
+      return res.status(400).json({ error: "Thiếu dữ liệu." });
+    }
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: 'Không tìm thấy token!'
+      });
+    }
+    jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findByPk(decoded.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Không tìm thấy người dùng!'
+      });
+    }
+    if(user.online === 1) {
+      return res.status(403).json({
+        success: false,
+        message: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
+      });
+    }
+    const character = await Character.findByPk(user.character);
+    if(!character) {
+      return res.status(400).json({ error: "Chưa tạo nhân vật" });
+    }
+    const gender = JSON.parse(character.InfoChar).Gender;
+    const milestones = JSON.parse(user.mocnap || "[]");
+
+    if (user.tongnap < milestone) {
+      return res.status(400).json({ error: "Không đủ điều kiện để nhận mốc" });
+    }
+
+    let mocIndex = -1;
+    for (let i = 0; i < milestones.length; i++) {
+      if (milestones[i].milestone == milestone) {
+        if (milestones[i].received) {
+          return res.status(400).json({ error: "Bạn Đã Nhận Mốc Này Rồi" });
+        }
+        mocIndex = i;
+        break;
+      }
+    }
+    if(mocIndex !== -1 && milestones[mocIndex].received) {
+      return res.status(400).json({ error: "Bạn Đã Nhận Mốc Này Rồi" });
+    }
+    
+    
+
+    
+
+
+    const milestoneData = await Milestone.findOne({
+      where: { amount: milestone }
+    });
+
+    if (!milestoneData) {
+      return res.status(400).json({ error: "Mốc không tồn tại" });
+    }
+
+    const reward = milestoneData.reward;
+    let bag = JSON.parse(character.ItemBag || "[]");  
+    const fullBag = bag.length + reward.length > 20 + (parseInt(character.PlusBag) || 0);
+
+    if (fullBag) {
+      return res.status(400).json({ error: "Hành Trang đầy Không Thể Nhận" });
+    }
+
+    reward.map(async (item) => {
+      if(item.id === "GENDER+592"){
+          item.id = gender + 592;
+      }
+      const itemData = await ItemOptions.findAll({
+        where: { item_id: item.id }
+      });
+      let options = itemData.map(option => ({
+        Id: option.option_id,
+        Param: option.param
+      }));
+      if (!itemData || itemData.length === 0) {
+        options = [{
+          Id: 73, // Default option ID
+          Param: 0 // Default parameter
+        }];
+      }
+      
+      bag.push({
+        IndexUI: bag.length,
+        SaleCoin: 0,
+        BuyPotential: 0,
+        Id: item.id,
+        BuyCoin: 0,
+        BuyGold: 0,
+        Quantity: item.quantity || 1,
+        Reason: "MOCNAP",
+        Options: options,
+        Idcaitrang: []
+      });
+      
+
+    });
+    console.log(bag);
+    milestones[mocIndex].received = true;
+    await user.update({ mocnap: JSON.stringify(milestones) });
+    await character.update({ ItemBag: JSON.stringify(bag) });
+
+    return res.json({ success: true, message: "Đã Nhận Thành Công mốc nạp" });
+    
+
+    // Kiểm tra xem người dùng đã nhận thưởng cho mốc này chưa
+    
+  
+    
+
+  } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'

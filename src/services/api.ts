@@ -28,7 +28,7 @@ api.interceptors.request.use(
 
 // Auth APIs
 export const authAPI = {
-  register: async (userData: { username: string; password: string; repassword: string; server_id: number }) => {
+  register: async (userData: { username: string; password: string; repassword: string; server_id: number; token: string }) => {
     const response = await api.post('/api/register', userData);
     return response.data as any;
   },
@@ -139,6 +139,14 @@ export const rankingAPI = {
   },
   getTaskRanking: async (isTopNewbie: boolean = false) => {
     const response = await api.get(`/api/ranking/task${isTopNewbie ? '?isTopNewbie=true' : ''}`);
+    return response.data;
+  },
+};
+
+export const milestoneAPI = {
+  
+  receiveMilestone: async (milestone: number) => {
+    const response = await api.post('/api/milestone', { milestone });
     return response.data;
   },
 };
