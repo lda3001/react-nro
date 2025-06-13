@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
@@ -21,7 +23,70 @@ const ItemOptions = require('./models/ItemOptions');
 require('./models/associations');
 
 const app = express();
-app.set('trust proxy', 1);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Handle joining a chat room
+  socket.on('join_room', (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room: ${roomId}`);
+  });
+
+  // Handle leaving a chat room
+  socket.on('leave_room', (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.id} left room: ${roomId}`);
+  });
+
+  // Handle chat messages
+  socket.on('send_message', async (data) => {
+    try {
+      const { roomId, message, userId } = data;
+      
+      // Get user info
+      const user = await User.findByPk(userId);
+      if (!user) {
+        socket.emit('error', { message: 'User not found' });
+        return;
+      }
+
+      // Get character info if exists
+      let character = null;
+      if (user.character) {
+        character = await Character.findByPk(user.character);
+      }
+
+      // Broadcast message to room
+      io.to(roomId).emit('receive_message', {
+        id: Date.now(),
+        text: message,
+        sender: {
+          id: user.id,
+          username: user.username,
+          characterName: character ? character.Name : null
+        },
+        timestamp: new Date().toLocaleTimeString()
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      socket.emit('error', { message: 'Error sending message' });
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 // Cấu hình phục vụ file tĩnh
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
@@ -844,6 +909,6 @@ app.post('/api/milestone', async (req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
