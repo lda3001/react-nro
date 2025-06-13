@@ -5,7 +5,6 @@ import CharacterShowcase from '../components/CharacterShowcase';
 import GameFeatures from '../components/GameFeatures';
 import DragonBallSnake from '../components/DragonBallSnake';
 import RankingSection from '../components/RankingSection';
-import AppChat from '../components/Appchat';
 
 const HomePage = () => {
   return (
@@ -16,7 +15,7 @@ const HomePage = () => {
       <RankingSection />
       <CharacterShowcase />
       <GameFeatures />
-      <AppChat />
+     
     </div>
   );
 };

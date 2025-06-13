@@ -31,7 +31,10 @@ const io = new Server(server, {
   }
 });
 
-// Socket.IO connection handling
+// Store chat messages in memory (you might want to use a database in production)
+const chatHistory = new Map();
+
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
@@ -39,6 +42,11 @@ io.on('connection', (socket) => {
   socket.on('join_room', (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.id} joined room: ${roomId}`);
+    
+    // Send chat history to the user when they join
+    if (chatHistory.has(roomId)) {
+      socket.emit('chat_history', Array.from(chatHistory.get(roomId)));
+    }
   });
 
   // Handle leaving a chat room
@@ -65,8 +73,7 @@ io.on('connection', (socket) => {
         character = await Character.findByPk(user.character);
       }
 
-      // Broadcast message to room
-      io.to(roomId).emit('receive_message', {
+      const messageData = {
         id: Date.now(),
         text: message,
         sender: {
@@ -75,7 +82,22 @@ io.on('connection', (socket) => {
           characterName: character ? character.Name : null
         },
         timestamp: new Date().toLocaleTimeString()
-      });
+      };
+
+      // Store message in chat history
+      if (!chatHistory.has(roomId)) {
+        chatHistory.set(roomId, new Set());
+      }
+      chatHistory.get(roomId).add(messageData);
+
+      // Keep only last 100 messages
+      const messages = Array.from(chatHistory.get(roomId));
+      if (messages.length > 100) {
+        chatHistory.set(roomId, new Set(messages.slice(-100)));
+      }
+
+      // Broadcast message to room
+      io.to(roomId).emit('receive_message', messageData);
     } catch (error) {
       console.error('Error sending message:', error);
       socket.emit('error', { message: 'Error sending message' });
@@ -900,6 +922,25 @@ app.post('/api/milestone', async (req, res) => {
 
   } catch (error) {
     console.log(error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
+// Add new endpoint to get chat history
+app.get('/api/chat/history/:roomId', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const messages = chatHistory.has(roomId) ? Array.from(chatHistory.get(roomId)) : [];
+    res.json({
+      success: true,
+      message: 'Lấy lịch sử chat thành công!',
+      data: messages
+    });
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
     res.status(500).json({
       success: false,
       message: 'Có lỗi xảy ra, vui lòng thử lại sau!'

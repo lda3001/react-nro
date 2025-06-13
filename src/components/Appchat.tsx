@@ -3,6 +3,7 @@ import "./appChatbot.css";
 import { useState, useRef, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 //const BASE_URL = process.env.NEXT_PUBLIC_API_CHATBOT_URL;
 
@@ -49,20 +50,29 @@ export default function AppChat() {
         setMessages(prev => [...prev, message]);
       });
 
+      // Listen for chat history
+      socketRef.current.on('chat_history', (history: Message[]) => {
+        setMessages(history);
+      });
+
       // Listen for errors
       socketRef.current.on('error', (error) => {
         console.error('Socket error:', error);
-        setMessages(prev => [...prev, {
-          id: Date.now(),
-          text: `Error: ${error.message}`,
-          sender: {
-            id: 0,
-            username: 'System',
-            characterName: null
-          },
-          timestamp: new Date().toLocaleTimeString()
-        }]);
+        toast.error(error.message || 'Có lỗi xảy ra');
       });
+
+      // Fetch chat history from API
+      // fetch('http://localhost:3000/api/chat/history/global')
+      //   .then(res => res.json())
+      //   .then(data => {
+      //     if (data.success) {
+      //       setMessages(data.data);
+      //     }
+      //   })
+      //   .catch(error => {
+      //     console.error('Error fetching chat history:', error);
+      //     toast.error('Không thể tải lịch sử chat');
+      //   });
 
       return () => {
         if (socketRef.current) {
@@ -148,6 +158,10 @@ export default function AppChat() {
   const getEndpoint = () => replyPending ? "/api/ask/reply" : "/api/ask";
 
   const handleSendMessage = async (quickReplyValue: string | null = null) => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
+      return;
+    }
     const messageToSend = quickReplyValue || inputMessage;
     if (messageToSend.trim() === "" || isLoading || !user || !socketRef.current) return;
 

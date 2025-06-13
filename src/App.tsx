@@ -9,6 +9,7 @@ import NewsSection from './components/NewsSection';
 import PostDetail from './components/PostDetail';
 import AdminPostPage from './pages/AdminPostPage';
 import Milestone from './pages/Milestone';
+import AppChat from './components/Appchat';
 
 function AppContent() {
   const getHours = new Date().getHours();
@@ -38,6 +39,7 @@ function AppContent() {
               <Route path="/milestone" element={<Milestone />} />
             </Routes>
           </main>
+          <AppChat />
           <Footer />
         </div>
       </div>
