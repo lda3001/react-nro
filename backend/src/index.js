@@ -556,7 +556,7 @@ app.get('/api/ranking/power', async (req, res) => {
       limit: 10,
       include: [{
         model: User,
-        attributes: ['created_at'],
+        attributes: ['created_at', 'sv_port'],
         ...(isTopNewbie && {
           where: {
             created_at: {
@@ -566,10 +566,19 @@ app.get('/api/ranking/power', async (req, res) => {
         })
       }]
     });
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
     characters = characters.map((character, index) => ({
       rank: index + 1,
       name: character.Name,
-      power: JSON.parse(character.InfoChar).Power
+      power: JSON.parse(character.InfoChar).Power,
+      server: listServer.find(server => server.Port === character.User.sv_port)?.id || 'Chưa Tạo Nhân Vật'
     }));
     res.json({
       success: true,
@@ -601,12 +610,21 @@ app.get('/api/ranking/recharge', async (req, res) => {
       } : {},
       order: [['tongnap', 'DESC']],
       limit: 10,
-      attributes: ['tongnap']
+      attributes: ['tongnap','sv_port']
+    });
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
     });
     const characters = users.map((u, index) => ({
       rank: index + 1,
       name: u.Character?.Name || 'Chưa Tạo Nhân Vật',
-      rechargeAmount: u.tongnap
+      rechargeAmount: u.tongnap,
+      server: listServer.find(server => server.Port === u.sv_port)?.id || 'Chưa Tạo Nhân Vật'
     }));
     res.json({
       success: true,
@@ -631,7 +649,7 @@ app.get('/api/ranking/event', async (req, res) => {
       limit: 10,
       include: [{
         model: User,
-        attributes: ['created_at'],
+        attributes: ['created_at', 'sv_port'],
         ...(isTopNewbie && {
           where: {
             created_at: {
@@ -641,10 +659,19 @@ app.get('/api/ranking/event', async (req, res) => {
         })
       }]
     });
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
     characters = characters.map((character, index) => ({
       rank: index + 1,
       name: character.Name,
-      eventPoints: JSON.parse(character.InfoChar).diemsanbosstet
+      eventPoints: JSON.parse(character.InfoChar).diemsanbosstet,
+      server: listServer.find(server => server.Port === character.User.sv_port)?.id || 'Chưa Tạo Nhân Vật'
     }));
     res.json({
       success: true,
@@ -672,7 +699,7 @@ app.get('/api/ranking/task', async (req, res) => {
       limit: 10,
       include: [{
         model: User,
-        attributes: ['created_at'],
+        attributes: ['created_at', 'sv_port'],
         ...(isTopNewbie && {
           where: {
             created_at: {
@@ -682,7 +709,14 @@ app.get('/api/ranking/task', async (req, res) => {
         })
       }]
     });
-    
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
     characters = await Promise.all(characters.map(async (character, index) => {
       const info = JSON.parse(character.InfoChar);
       const gender = info?.Gender;
@@ -696,7 +730,8 @@ app.get('/api/ranking/task', async (req, res) => {
       return {
         rank: index + 1,
         name: character.Name,
-        taskPoints: taskTemplate?.dataValues?.name || null
+        taskPoints: taskTemplate?.dataValues?.name || null,
+        server: listServer.find(server => server.Port === character.User.sv_port)?.id || 'Chưa Tạo Nhân Vật'
       };
     }));
     

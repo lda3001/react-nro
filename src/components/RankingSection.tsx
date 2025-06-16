@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { rankingAPI } from '../services/api';
+import { authAPI, rankingAPI, userAPI } from '../services/api';
 
 interface RankingPlayer {
   rank: number;
@@ -10,6 +10,7 @@ interface RankingPlayer {
   eventPoints?: number;
   rechargeAmount?: number;
   taskPoints?: number;
+  server?: number;
 }
 
 interface RankingResponse {
@@ -18,10 +19,18 @@ interface RankingResponse {
     data: RankingPlayer[];
 }
 
+interface Server {
+  id: number;
+  name: string;
+  port: number;
+}
+
 const RankingSection: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'power' | 'recharge' | 'event' | 'task' >('power');
   const [isLoading, setIsLoading] = useState(false);
   const [isTopNewbie, setIsTopNewbie] = useState(false);
+  const [listServer, setListServer] = useState<Server[]>([]);
+  const [selectedServer, setSelectedServer] = useState<string>('all');
 
   // Mock data for different ranking types
 //   const powerRankingData: RankingPlayer[] = [
@@ -64,7 +73,17 @@ const RankingSection: React.FC = () => {
         setIsLoading(false);
       }
     };
-    
+
+    const fetchListServer = async () => {
+      try {
+        const response = await authAPI.getListServer() as { data: Server[] };
+        setListServer(response.data);
+      } catch (error) {
+        console.error('Error fetching server list:', error);
+      }
+    };
+
+    fetchListServer();
     fetchRankingData();
   }, [activeTab, isTopNewbie]);
   
@@ -99,28 +118,42 @@ const RankingSection: React.FC = () => {
   };
 
   const getCurrentRankingData = () => {
+    let data = [];
     switch (activeTab) {
       case 'power':
-        return powerRankingData;
+        data = powerRankingData;
+        break;
       case 'recharge':
-        return rechargeRankingData;
+        data = rechargeRankingData;
+        break;
       case 'event':
-        return eventRankingData;
+        data = eventRankingData;
+        break;
       case 'task':
-        return taskRankingData;
+        data = taskRankingData;
+        break;
     }
+    
+    if (selectedServer !== 'all') {
+      console.log(data);
+      const sv = parseInt(selectedServer);
+      
+      const dataServer = data.filter(player => player.server === sv);
+      return dataServer;
+    }
+    return data;
   };
 
   const getColumnHeaders = () => {
     switch (activeTab) {
       case 'power':
-        return ['Hạng', 'Tên', 'Sức Mạnh'];
+        return ['Hạng', 'Tên', 'Sức Mạnh', 'Server'];
       case 'recharge':
-        return ['Hạng', 'Tên', 'Số Tiền Nạp'];
+        return ['Hạng', 'Tên', 'Số Tiền Nạp', 'Server'];
       case 'event':
-        return ['Hạng', 'Tên', 'Điểm Sự Kiện'];
+        return ['Hạng', 'Tên', 'Điểm Sự Kiện', 'Server'];
       case 'task':
-        return ['Hạng', 'Tên', 'Nhiệm Vụ'];
+        return ['Hạng', 'Tên', 'Nhiệm Vụ', 'Server'];
     }
   };
 
@@ -143,6 +176,8 @@ const RankingSection: React.FC = () => {
         <h2 className="text-2xl sm:text-4xl font-bold text-center mb-1 sm:mb-2 text-orange-600">Bảng Xếp Hạng</h2>
         <p className="text-center text-sm sm:text-base text-gray-600 mb-4 sm:mb-8">Top những người chơi mạnh nhất</p>
 
+        
+
         {/* Toggle Button */}
         <div className="flex justify-center mb-4">
           <button
@@ -155,6 +190,22 @@ const RankingSection: React.FC = () => {
           >
             {isTopNewbie ? 'Top Tân Thủ' : 'Tất Cả'}
           </button>
+        </div>
+
+        {/* Server Selection */}
+        <div className="flex justify-center mb-4">
+          <select
+            value={selectedServer}
+            onChange={(e) => setSelectedServer(e.target.value)}
+            className="px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-orange-600"
+          >
+            <option value="all">Tất cả Server</option>
+            {listServer.map((server) => (
+              <option key={server.id} value={server.id}>
+                Server {server.name}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Tabs */}
@@ -203,7 +254,7 @@ const RankingSection: React.FC = () => {
         
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
           <div className="bg-gradient-to-r from-orange-500 to-red-600 p-2 sm:p-4">
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 text-white font-bold text-sm sm:text-base">
+            <div className="grid grid-cols-4 gap-2 sm:gap-4 text-white font-bold text-sm sm:text-base">
               {getColumnHeaders().map((header, index) => (
                 <div key={index} className="text-center">{header}</div>
               ))}
@@ -219,7 +270,7 @@ const RankingSection: React.FC = () => {
               {getCurrentRankingData().map((player) => (
                 <div 
                   key={player.rank} 
-                  className="grid grid-cols-3 gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-orange-50 transition-colors duration-200"
+                  className="grid grid-cols-4 gap-2 sm:gap-4 p-2 sm:p-4 hover:bg-orange-50 transition-colors duration-200"
                 >
                   <div className="flex justify-center items-center">
                     <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-sm sm:text-base ${getRankColor(player.rank)}`}>
@@ -231,6 +282,9 @@ const RankingSection: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-center">
                     <span className="font-semibold text-orange-600 text-sm sm:text-base">{getValueDisplay(player)}</span>
+                  </div>
+                  <div className="flex items-center justify-center">
+                    <span className="font-medium text-gray-600 text-sm sm:text-base">{listServer.find(server => server.id === player.server)?.name}</span>
                   </div>
                 </div>
               ))}
