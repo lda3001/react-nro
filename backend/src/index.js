@@ -736,10 +736,18 @@ app.post('/api/milestone', async (req, res) => {
         message: 'Không tìm thấy người dùng!'
       });
     }
+    const listPort = [22345];
+    if(!listPort.includes(user.sv_port)) {
+      return res.status(403).json({
+        success: false,
+        err: 'Server này chưa áp dụng mốc nạp!'
+      });
+    }
+
     if(user.online === 1) {
       return res.status(403).json({
         success: false,
-        message: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
+        err: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
       });
     }
     const character = await Character.findByPk(user.character);
@@ -780,9 +788,9 @@ app.post('/api/milestone', async (req, res) => {
       return res.status(400).json({ error: "Mốc không tồn tại" });
     }
 
-    const reward = milestoneData.reward;
+    const reward = JSON.parse(milestoneData.reward);
     let bag = JSON.parse(character.ItemBag || "[]");  
-    const fullBag = bag.length + reward.length > 20 + (parseInt(character.PlusBag) || 0);
+    const fullBag = bag.length + reward.length > 40 + (parseInt(character.PlusBag) || 0);
 
     if (fullBag) {
       return res.status(400).json({ error: "Hành Trang đầy Không Thể Nhận" });
