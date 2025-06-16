@@ -551,6 +551,18 @@ app.post('/api/posts', async (req, res) => {
 app.get('/api/ranking/power', async (req, res) => {
   try {
     const isTopNewbie = req.query.isTopNewbie === 'true';
+    const sv = req.query.sv;
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
+    
+    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
       limit: 10,
@@ -563,17 +575,15 @@ app.get('/api/ranking/power', async (req, res) => {
               [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
             }
           }
+        }),
+        ...(serverselected && {
+          where: {
+            sv_port: serverselected
+          }
         })
       }]
     });
-    const listServer = await ListServer.findAll({
-      where: {
-        Status: 1
-      },
-      order: [
-        ['id', 'ASC']
-      ]
-    });
+   
     characters = characters.map((character, index) => ({
       rank: index + 1,
       name: character.Name,
@@ -598,6 +608,16 @@ app.get('/api/ranking/power', async (req, res) => {
 app.get('/api/ranking/recharge', async (req, res) => {
   try {
     const isTopNewbie = req.query.isTopNewbie === 'true';
+    const sv = req.query.sv;
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
+    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
     let users = await User.findAll({
       include: [{
         model: Character,
@@ -607,19 +627,17 @@ app.get('/api/ranking/recharge', async (req, res) => {
         created_at: {
           [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
         }
-      } : {},
+      } : {} ,
+      ...(serverselected && {
+        where: {
+          sv_port: serverselected
+        }
+      }),
       order: [['tongnap', 'DESC']],
       limit: 10,
       attributes: ['tongnap','sv_port']
     });
-    const listServer = await ListServer.findAll({
-      where: {
-        Status: 1
-      },
-      order: [
-        ['id', 'ASC']
-      ]
-    });
+    
     const characters = users.map((u, index) => ({
       rank: index + 1,
       name: u.Character?.Name || 'Chưa Tạo Nhân Vật',
@@ -644,6 +662,16 @@ app.get('/api/ranking/recharge', async (req, res) => {
 app.get('/api/ranking/event', async (req, res) => {
   try {
     const isTopNewbie = req.query.isTopNewbie === 'true';
+    const sv = req.query.sv;
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
+    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.diemsanbosstet')) AS UNSIGNED)`), 'DESC']],
       limit: 10,
@@ -656,17 +684,15 @@ app.get('/api/ranking/event', async (req, res) => {
               [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
             }
           }
+        }),
+        ...(serverselected && {
+          where: {
+            sv_port: serverselected
+          }
         })
       }]
     });
-    const listServer = await ListServer.findAll({
-      where: {
-        Status: 1
-      },
-      order: [
-        ['id', 'ASC']
-      ]
-    });
+   
     characters = characters.map((character, index) => ({
       rank: index + 1,
       name: character.Name,
@@ -690,6 +716,16 @@ app.get('/api/ranking/event', async (req, res) => {
 app.get('/api/ranking/task', async (req, res) => {
   try {
     const isTopNewbie = req.query.isTopNewbie === 'true';
+    const sv = req.query.sv;
+    const listServer = await ListServer.findAll({
+      where: {
+        Status: 1
+      },
+      order: [
+        ['id', 'ASC']
+      ]
+    });
+    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
     let characters = await Character.findAll({
       order: [
         [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC'],
@@ -706,17 +742,15 @@ app.get('/api/ranking/task', async (req, res) => {
               [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
             }
           }
+        }),
+        ...(serverselected && {
+          where: {
+            sv_port: serverselected
+          }
         })
       }]
     });
-    const listServer = await ListServer.findAll({
-      where: {
-        Status: 1
-      },
-      order: [
-        ['id', 'ASC']
-      ]
-    });
+    
     characters = await Promise.all(characters.map(async (character, index) => {
       const info = JSON.parse(character.InfoChar);
       const gender = info?.Gender;

@@ -122,24 +122,29 @@ export const postAPI = {
     return response.data;
   },
 };
+const buildRankingRequest = async (type: string, isTopNewbie: boolean = false, sv: number | null = null) => {
+  const params = new URLSearchParams();
+  if (isTopNewbie) params.append('isTopNewbie', 'true');
+  if (sv !== null) params.append('sv', sv.toString());
 
+  const queryString = params.toString();
+  const response = await api.get(`/api/ranking/${type}${queryString ? `?${queryString}` : ''}`);
+  return response.data;
+};
 // Ranking APIs
 export const rankingAPI = {
-  getPowerRanking: async (isTopNewbie: boolean = false) => {
-    const response = await api.get(`/api/ranking/power${isTopNewbie ? '?isTopNewbie=true' : ''}`);
-    return response.data;
+   
+  getPowerRanking: async (isTopNewbie: boolean = false, sv: number | null = null) => {
+    return buildRankingRequest('power', isTopNewbie, sv);
   },
-  getRechargeRanking: async (isTopNewbie: boolean = false) => {
-    const response = await api.get(`/api/ranking/recharge${isTopNewbie ? '?isTopNewbie=true' : ''}`);
-    return response.data;
+  getRechargeRanking: async (isTopNewbie: boolean = false, sv: number | null = null) => {
+    return buildRankingRequest('recharge', isTopNewbie, sv);
   },
-  getEventRanking: async (isTopNewbie: boolean = false) => {
-    const response = await api.get(`/api/ranking/event${isTopNewbie ? '?isTopNewbie=true' : ''}`);
-    return response.data;
+  getEventRanking: async (isTopNewbie: boolean = false, sv: number | null = null) => {
+    return buildRankingRequest('event', isTopNewbie, sv);
   },
-  getTaskRanking: async (isTopNewbie: boolean = false) => {
-    const response = await api.get(`/api/ranking/task${isTopNewbie ? '?isTopNewbie=true' : ''}`);
-    return response.data;
+  getTaskRanking: async (isTopNewbie: boolean = false, sv: number | null = null) => {
+    return buildRankingRequest('task', isTopNewbie, sv);
   },
 };
 

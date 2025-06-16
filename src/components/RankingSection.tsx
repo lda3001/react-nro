@@ -48,22 +48,26 @@ const RankingSection: React.FC = () => {
   useEffect(() => {
     const fetchRankingData = async () => {
       setIsLoading(true);
+      let sv = null;
+      if(selectedServer !== 'all'){
+        sv = parseInt(selectedServer);
+      }
       try {
         switch (activeTab) {
           case 'power':
-            const powerResponse = await rankingAPI.getPowerRanking(isTopNewbie) as RankingResponse;
+            const powerResponse = await rankingAPI.getPowerRanking(isTopNewbie, sv) as RankingResponse;
             setPowerRankingData(powerResponse.data);
             break;
           case 'recharge':
-            const rechargeResponse = await rankingAPI.getRechargeRanking(isTopNewbie) as RankingResponse;
+            const rechargeResponse = await rankingAPI.getRechargeRanking(isTopNewbie, sv) as RankingResponse;
             setRechargeRankingData(rechargeResponse.data);
             break;
           case 'event':
-            const eventResponse = await rankingAPI.getEventRanking(isTopNewbie) as RankingResponse;
+            const eventResponse = await rankingAPI.getEventRanking(isTopNewbie, sv) as RankingResponse;
             setEventRankingData(eventResponse.data);
             break;
           case 'task':
-            const taskResponse = await rankingAPI.getTaskRanking(isTopNewbie) as RankingResponse;
+            const taskResponse = await rankingAPI.getTaskRanking(isTopNewbie, sv) as RankingResponse;
             setTaskRankingData(taskResponse.data);
             break;
         }
@@ -85,7 +89,7 @@ const RankingSection: React.FC = () => {
 
     fetchListServer();
     fetchRankingData();
-  }, [activeTab, isTopNewbie]);
+  }, [activeTab, isTopNewbie, selectedServer]);
   
 
 //   const rechargeRankingData: RankingPlayer[] = [
@@ -134,13 +138,13 @@ const RankingSection: React.FC = () => {
         break;
     }
     
-    if (selectedServer !== 'all') {
-      console.log(data);
-      const sv = parseInt(selectedServer);
+    // if (selectedServer !== 'all') {
+    //   console.log(data);
+    //   const sv = parseInt(selectedServer);
       
-      const dataServer = data.filter(player => player.server === sv);
-      return dataServer;
-    }
+    //   const dataServer = data.filter(player => player.server === sv);
+    //   return dataServer;
+    // }
     return data;
   };
 
