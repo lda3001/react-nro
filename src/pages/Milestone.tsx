@@ -86,7 +86,7 @@ const Milestone= () => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-8">
-                    {JSON.parse(user.milestone).map((milestone: Milestone) => {
+                    {user.milestone && JSON.parse(user.milestone).map((milestone: Milestone) => {
                         const isAchieved = user.tongnap >= milestone.milestone;
                         const status = isAchieved ? (milestone.received ? 'Received' : 'Receive') : 'Not Achieved';
                         const buttonImage = isAchieved

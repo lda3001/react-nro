@@ -18,6 +18,8 @@ interface Message {
   timestamp: string;
 }
 
+type ChatRoom = 'global' | 'clan';
+
 interface ReplyOption {
   label: string;
   value: string;
@@ -31,19 +33,53 @@ export default function AppChat() {
   const [replyPending, setReplyPending] = useState(false);
   const [replyOptions, setReplyOptions] = useState<ReplyOption[]>([]);
   const [focusedOptionIndex, setFocusedOptionIndex] = useState(0);
+  const [currentRoom, setCurrentRoom] = useState<string>('global');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const resetTimerRef = useRef<NodeJS.Timeout | null>(null);
   const quickReplyRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const socketRef = useRef<Socket | null>(null);
+  const [clanInfo, setClanInfo] = useState<any>(null);
   const { user } = useAuth();
+  const chatWindowRef = useRef<HTMLDivElement>(null);
+
+  // Add mouse event handlers for scroll locking
+  useEffect(() => {
+    const handleMouseEnter = () => {
+      document.body.style.overflow = 'hidden';
+    };
+
+    const handleMouseLeave = () => {
+      document.body.style.overflow = 'auto';
+    };
+
+    const chatWindow = chatWindowRef.current;
+    if (chatWindow) {
+      chatWindow.addEventListener('mouseenter', handleMouseEnter);
+      chatWindow.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (chatWindow) {
+        chatWindow.removeEventListener('mouseenter', handleMouseEnter);
+        chatWindow.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      // Reset body overflow when component unmounts
+      document.body.style.overflow = 'auto';
+    };
+  }, []);
 
   useEffect(() => {
     if (isOpen && user) {
       // Initialize socket connection
       socketRef.current = io('http://localhost:3000');
+      if(currentRoom === 'clan'){
+        socketRef.current.emit('join_room', user.character?.clanId);
+      }else{
+        socketRef.current.emit('join_room', 'global');
+      }
 
-      // Join the global chat room
-      socketRef.current.emit('join_room', 'global');
+      // Join the selected chat room
+      socketRef.current.emit('join_room', currentRoom);
 
       // Listen for incoming messages
       socketRef.current.on('receive_message', (message: Message) => {
@@ -53,6 +89,11 @@ export default function AppChat() {
       // Listen for chat history
       socketRef.current.on('chat_history', (history: Message[]) => {
         setMessages(history);
+      });
+
+      // Listen for clan info
+      socketRef.current.on('clan_info', (info: any) => {
+        setClanInfo(info);
       });
 
       // Listen for errors
@@ -76,12 +117,12 @@ export default function AppChat() {
 
       return () => {
         if (socketRef.current) {
-          socketRef.current.emit('leave_room', 'global');
+          socketRef.current.emit('leave_room', currentRoom);
           socketRef.current.disconnect();
         }
       };
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, currentRoom]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -184,9 +225,9 @@ export default function AppChat() {
 
     try {
       socketRef.current.emit('send_message', {
-        roomId: 'global',
+        roomId: currentRoom,
         message: messageToSend,
-        userId: user.id
+        token: localStorage.getItem('token')
       });
     } catch (error) {
       console.error('Error sending message:', error);
@@ -317,21 +358,67 @@ export default function AppChat() {
   }, [replyOptions, focusedOptionIndex]);
   
 
+  // Add function to switch chat rooms
+  const switchChatRoom = (room: string) => {
+    if (room === 'clan' && !user?.character?.clanId) {
+      toast.error("Bạn không có clan");
+      return;
+    }
+
+    let roomId = room;
+    if(room === 'clan'){
+      roomId = user?.character?.clanId?.toString() || '-1';
+    }
+    
+    if (socketRef.current) {
+      socketRef.current.emit('leave_room', currentRoom);
+      setMessages([]);
+      setCurrentRoom(roomId);
+      socketRef.current.emit('join_room', roomId);
+     
+      
+      
+      // Reset clan info when switching rooms
+      if(roomId === 'global') {
+        setClanInfo(null);
+      }
+    }
+  };
+
   return (
     <div className="chatbot-container">
-      <button className="chatbot-toggle" onClick={() => setIsOpen(!isOpen)}>
+      <button className="chatbot-toggle" onClick={() => {
+        if(!user){
+          toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
+          return;
+        }
+        setIsOpen(!isOpen)}}>
         {isOpen ? "✕" : "💬"}
       </button>
 
       {isOpen && (
-        <div className="chatbot-window">
+        <div className="chatbot-window" ref={chatWindowRef}>
           <div className="chatbot-header">
             <div className="header-content">
               <div className="bot-avatar"><span>💬</span></div>
               <div className="header-info">
-                <h3>Global Chat</h3>
-                <p>Chat with other players</p>
+                <h3>{currentRoom === 'global' ? 'Global Chat' : `${clanInfo?.name || 'Clan Chat'}`}</h3>
+                <p>{currentRoom === 'global' ? 'Chat with other players' : ` ${clanInfo?.slogan || 'Chat with your clan'}`}</p>
               </div>
+            </div>
+            <div className="chat-room-selector z-50">
+              <button 
+                className={`room-button ${currentRoom === 'global' ? 'active' : ''}`}
+                onClick={() => switchChatRoom('global')}
+              >
+                Global
+              </button>
+              <button 
+                className={`room-button ${currentRoom === user?.character?.clanId?.toString()   ? 'active' : ''}`}
+                onClick={() => switchChatRoom('clan')}
+              >
+                Clan
+              </button>
             </div>
           </div>
 

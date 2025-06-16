@@ -18,6 +18,7 @@ const TaskTemplate = require('./models/TaskTemplate');
 const { Op } = require('sequelize');
 const Milestone = require('./models/Milestone');
 const ItemOptions = require('./models/ItemOptions');
+const Clan = require('./models/Clan');
 
 // Import associations
 require('./models/associations');
@@ -39,9 +40,24 @@ io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
   // Handle joining a chat room
-  socket.on('join_room', (roomId) => {
+  socket.on('join_room', async (roomId) => {
     socket.join(roomId);
     console.log(`User ${socket.id} joined room: ${roomId}`);
+    if(roomId != 'global'){
+      const clan = await Clan.findByPk(roomId);
+      if(!clan){
+        socket.emit('error', { message: 'Clan không tồn tại' });
+        return;
+      }
+      socket.emit('clan_info', {
+        id: clan.id,
+        name: clan.Name,
+        info: clan.Info,
+        slogan: clan.Slogan,
+      });
+     
+      
+    }
     
     // Send chat history to the user when they join
     if (chatHistory.has(roomId)) {
@@ -58,8 +74,9 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send_message', async (data) => {
     try {
-      const { roomId, message, userId } = data;
-      
+      const { roomId, message, token } = data;
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const userId = decoded.id;
       // Get user info
       const user = await User.findByPk(userId);
       if (!user) {
@@ -83,7 +100,10 @@ io.on('connection', (socket) => {
         },
         timestamp: new Date().toLocaleTimeString()
       };
-
+      if(roomId != character.ClanId && roomId != 'global'){
+        socket.emit('error', { message: `${user.username} không có quyền gửi tin nhắn trong clan này! ${roomId} ${character.ClanId}` });
+        return;
+      }
       // Store message in chat history
       if (!chatHistory.has(roomId)) {
         chatHistory.set(roomId, new Set());
@@ -179,6 +199,7 @@ sequelize.sync({ alter: true, force: false })
     // Finally sync other models
     
     await TaskTemplate.sync({ alter: true });
+    await Clan.sync({ alter: true });
     console.log('Database synced successfully');
   })
   .catch((err) => {
@@ -446,8 +467,8 @@ app.get('/api/user', async (req, res) => {
     character = {
       id: 0,
       name: '',
-      infochar: ''
-
+      infochar: '',
+      clanId: -1,
     }
   }
     
@@ -466,6 +487,7 @@ app.get('/api/user', async (req, res) => {
         id: character.id || 0,
         name: character.Name || '',
         infochar: character.InfoChar || '',
+        clanId: character.ClanId || -1,
       }
     }
   });
@@ -822,6 +844,13 @@ app.post('/api/milestone', async (req, res) => {
         message: 'Không tìm thấy người dùng!'
       });
     }
+    const listPort = [34567 ,78964];
+    if(!listPort.includes(user.sv_port)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Server này chưa áp dụng mốc nạp!'
+      });
+    }
     if(user.online === 1) {
       return res.status(403).json({
         success: false,
@@ -866,7 +895,7 @@ app.post('/api/milestone', async (req, res) => {
       return res.status(400).json({ error: "Mốc không tồn tại" });
     }
 
-    const reward = milestoneData.reward;
+    const reward = JSON.parse(milestoneData.reward);
     let bag = JSON.parse(character.ItemBag || "[]");  
     const fullBag = bag.length + reward.length > 20 + (parseInt(character.PlusBag) || 0);
 
