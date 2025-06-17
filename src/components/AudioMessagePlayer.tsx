@@ -75,9 +75,9 @@ const AudioMessagePlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
     };
 
     const handleError = (e: Event) => {
-      console.error('Audio error:', e);
-      setError('Có lỗi xảy ra khi tải audio.');
-      setIsPlaying(false);
+      // console.error('Audio error:', e);
+      // setError('Có lỗi xảy ra khi tải audio.');
+      // setIsPlaying(false);
     };
 
     audio.addEventListener('timeupdate', updateTime);
@@ -128,9 +128,9 @@ const AudioMessagePlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
         </div>
         <span className="text-xs whitespace-nowrap text-blue-600">{formatTime(currentTime)} / {formatTime(duration)}</span>
       </div>
-      {error && (
+      {/* {error && (
         <div className="text-red-500 text-xs">{error}</div>
-      )}
+      )} */}
     </div>
   );
 };
