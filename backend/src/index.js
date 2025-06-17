@@ -34,6 +34,8 @@ const io = new Server(server, {
 
 // Store chat messages in memory (you might want to use a database in production)
 const chatHistory = new Map();
+// notification if only exits in 5min
+let notification = '';
 
 
 io.on('connection', (socket) => {
@@ -74,7 +76,7 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send_message', async (data) => {
     try {
-      const { roomId, message, token } = data;
+      const { roomId, message, audioBuffer, mimeType, token } = data;
       const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.id;
       // Get user info
@@ -92,18 +94,30 @@ io.on('connection', (socket) => {
 
       const messageData = {
         id: Date.now(),
-        text: message,
+        text: message || '',
+        audioBuffer: audioBuffer || null,
+        mimeType: mimeType || null,
         sender: {
           id: user.id,
           username: user.username,
-          characterName: character ? character.Name : null
+          characterName: character ? character.Name : null,
+          Hair: character ? JSON.parse(character.InfoChar).Hair : null
         },
         timestamp: new Date().toLocaleTimeString()
       };
+
       if(roomId != character.ClanId && roomId != 'global'){
         socket.emit('error', { message: `${user.username} không có quyền gửi tin nhắn trong clan này! ${roomId} ${character.ClanId}` });
         return;
       }
+
+      if(user.role == 1){
+        notification = message;
+        // Broadcast to all connected clients
+        io.emit('notification', { message: notification, time: new Date().getTime() });
+        return;
+      }
+
       // Store message in chat history
       if (!chatHistory.has(roomId)) {
         chatHistory.set(roomId, new Set());
@@ -848,13 +862,13 @@ app.post('/api/milestone', async (req, res) => {
     if(!listPort.includes(user.sv_port)) {
       return res.status(403).json({
         success: false,
-        message: 'Server này chưa áp dụng mốc nạp!'
+        error: 'Server này chưa áp dụng mốc nạp!'
       });
     }
     if(user.online === 1) {
       return res.status(403).json({
         success: false,
-        message: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
+        error: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
       });
     }
     const character = await Character.findByPk(user.character);

@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
-
+import Marquee from "react-fast-marquee";
+import AudioMessagePlayer from "./AudioMessagePlayer";
 //const BASE_URL = process.env.NEXT_PUBLIC_API_CHATBOT_URL;
 
 interface Message {
@@ -14,8 +15,11 @@ interface Message {
     id: number;
     username: string;
     characterName: string | null;
+    Hair: number | null;
   };
   timestamp: string;
+  audioBuffer?: BlobPart;
+  mimeType?: string;
 }
 
 type ChatRoom = 'global' | 'clan';
@@ -41,6 +45,12 @@ export default function AppChat() {
   const [clanInfo, setClanInfo] = useState<any>(null);
   const { user } = useAuth();
   const chatWindowRef = useRef<HTMLDivElement>(null);
+  const [notification, setNotification] = useState<any>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const isRecordingRef = useRef(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // Add mouse event handlers for scroll locking
   useEffect(() => {
@@ -70,13 +80,11 @@ export default function AppChat() {
 
   useEffect(() => {
     if (isOpen && user) {
+      
+      
       // Initialize socket connection
       socketRef.current = io('http://localhost:3000');
-      if(currentRoom === 'clan'){
-        socketRef.current.emit('join_room', user.character?.clanId);
-      }else{
-        socketRef.current.emit('join_room', 'global');
-      }
+    
 
       // Join the selected chat room
       socketRef.current.emit('join_room', currentRoom);
@@ -102,18 +110,10 @@ export default function AppChat() {
         toast.error(error.message || 'Có lỗi xảy ra');
       });
 
-      // Fetch chat history from API
-      // fetch('http://localhost:3000/api/chat/history/global')
-      //   .then(res => res.json())
-      //   .then(data => {
-      //     if (data.success) {
-      //       setMessages(data.data);
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.error('Error fetching chat history:', error);
-      //     toast.error('Không thể tải lịch sử chat');
-      //   });
+      socketRef.current.on('notification', (message: any) => {
+        
+        setNotification(message);
+      });
 
       return () => {
         if (socketRef.current) {
@@ -198,26 +198,79 @@ export default function AppChat() {
 
   const getEndpoint = () => replyPending ? "/api/ask/reply" : "/api/ask";
 
+  // Add audio recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+  
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+  
+        // Convert blob to array buffer
+        const arrayBuffer = await audioBlob.arrayBuffer();
+  
+        // Send audio buffer via WebSocket
+        if (socketRef.current) {
+          socketRef.current.emit('send_message', {
+            roomId: currentRoom,
+            message: '',
+            audioBuffer: arrayBuffer,
+            mimeType: audioBlob.type,
+            token: localStorage.getItem('token')
+          });
+        }
+      };
+  
+      mediaRecorder.start();
+      setIsRecording(true);
+      isRecordingRef.current = true;
+
+      // Auto stop after 8 seconds
+      setTimeout(() => {
+        if (isRecordingRef.current && mediaRecorderRef.current) {
+          mediaRecorder.stop();
+          setIsRecording(false);
+          isRecordingRef.current = false;
+          toast.info('Đã đạt giới hạn ghi âm 8 giây');
+        }
+      }, 9000);
+
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Không thể truy cập microphone');
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecordingRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      isRecordingRef.current = false;
+  
+      // Stop all audio tracks
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
+  };
+
+  // Modify handleSendMessage to handle audio messages
   const handleSendMessage = async (quickReplyValue: string | null = null) => {
     if (!user) {
       toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
       return;
     }
     const messageToSend = quickReplyValue || inputMessage;
-    if (messageToSend.trim() === "" || isLoading || !user || !socketRef.current) return;
+    if ((messageToSend.trim() === "" && !audioBlob) || isLoading || !user || !socketRef.current) return;
 
-    const userMessage: Message = {
-      id: Date.now(),
-      text: messageToSend,
-      sender: {
-        id: user.id,
-        username: user.username,
-        characterName: null
-      },
-      timestamp: new Date().toLocaleTimeString()
-    };
-
-    //setMessages(prev => [...prev, userMessage]);
     setInputMessage("");
     setIsLoading(true);
     setReplyOptions([]);
@@ -227,8 +280,10 @@ export default function AppChat() {
       socketRef.current.emit('send_message', {
         roomId: currentRoom,
         message: messageToSend,
+        audioUrl: audioBlob ? URL.createObjectURL(audioBlob) : null,
         token: localStorage.getItem('token')
       });
+      setAudioBlob(null);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, {
@@ -237,7 +292,8 @@ export default function AppChat() {
         sender: {
           id: 0,
           username: 'System',
-          characterName: null
+          characterName: null,
+          Hair: null
         },
         timestamp: new Date().toLocaleTimeString()
       }]);
@@ -295,18 +351,27 @@ export default function AppChat() {
     }
   };
 
-  const renderMessageContent = (text: string) => {
-    const parts = parseMessageWithPlainLinks(text);
-    return parts.map((part, index) => {
-      if (part.type === 'link') {
-        return (
-          <a key={index} href={part.url} target="_blank" rel="noopener noreferrer" className="message-link">
-            {part.text}
-          </a>
-        );
-      }
-      return <span key={index}>{part.content}</span>;
-    });
+  // Modify message rendering to include audio
+  const renderMessageContent = (message: Message ) => {
+    const parts = parseMessageWithPlainLinks(message.text);
+    return (
+      <>
+        {parts.map((part, index) => {
+          if (part.type === 'link') {
+            return (
+              <a key={index} href={part.url} target="_blank" rel="noopener noreferrer" className="message-link">
+                {part.text}
+              </a>
+            );
+          }
+          return <span key={index}>{part.content}</span>;
+        })}
+       {message.mimeType && !message.text && (
+            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([message.audioBuffer || ''], { type: message.mimeType || 'audio/webm' }))} />
+       )}
+        
+      </>
+    );
   };
 
   const cancelQuickReply = () => {
@@ -323,6 +388,7 @@ export default function AppChat() {
       const total = replyOptions.length + 1; // thêm 1 cho nút ✕
   
       let newIndex = focusedOptionIndex;
+      
   
       switch (e.key) {
         case "Tab":
@@ -421,23 +487,35 @@ export default function AppChat() {
               </button>
             </div>
           </div>
+          
+          <Marquee className="text-red-600 font-bold" pauseOnHover={true}>
+          
+          {notification && new Date().getTime() - notification.time < 300000 && (
+            <>
+              Thông Báo Admin:       {notification.message}
+            </>
+          )}
 
+          </Marquee>
+        
           <div className="chatbot-messages">
             {messages.map((message) => (
               <div key={message.id} className={`message-wrapper ${message.sender.id === user?.id ? 'user' : ''}`}>
                 {message.sender.id !== user?.id && (
                   <div className="message-avatar">
-                    <span>{message.sender.characterName ? message.sender.characterName[0] : message.sender.username[0]}</span>
+                    <img src={`/images/avatar/${message.sender.Hair ? message.sender.Hair : '454'}.png`} alt="" />
+                    
                   </div>
                 )}
                 <div className="message-bubble">
                   <div className="message-sender">{message.sender.characterName || message.sender.username}</div>
-                  <div className="message-text">{message.text}</div>
+                  <div className="message-text">{renderMessageContent(message)}</div>
                   <span className="message-timestamp">{message.timestamp}</span>
                 </div>
                 {message.sender.id === user?.id && (
                   <div className="message-avatar user-avatar">
-                    <span>{message.sender.username[0]}</span>
+                    <img src={`/images/avatar/${message.sender.Hair ? message.sender.Hair : '454'}.png`} alt="" />
+                    
                   </div>
                 )}
               </div>
@@ -493,9 +571,16 @@ export default function AppChat() {
               disabled={isLoading}
             />
             <button
+              className={`mic-button ${isRecording ? 'recording' : ''}`}
+              onClick={isRecording ? stopRecording : startRecording}
+              title={isRecording ? 'Stop Recording' : 'Start Recording'}
+            >
+              🎤
+            </button>
+            <button
               className="send-button"
               onClick={() => handleSendMessage()}
-              disabled={isLoading || !inputMessage.trim()}
+              disabled={isLoading || (!inputMessage.trim() && !audioBlob)}
             >
               <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13"></line>
