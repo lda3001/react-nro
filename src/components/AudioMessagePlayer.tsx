@@ -105,6 +105,7 @@ const AudioMessagePlayer: React.FC<AudioPlayerProps> = ({ audioUrl }) => {
           ref={audioRef} 
           src={audioUrl} 
           preload="metadata"
+          
           playsInline
           controls={false}
         />
