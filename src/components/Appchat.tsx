@@ -54,31 +54,7 @@ export default function AppChat() {
   const audioChunksRef = useRef<Blob[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // Add mouse event handlers for scroll locking
-  useEffect(() => {
-    const handleMouseEnter = () => {
-      document.body.style.overflow = 'hidden';
-    };
-
-    const handleMouseLeave = () => {
-      document.body.style.overflow = 'auto';
-    };
-
-    const chatWindow = chatWindowRef.current;
-    if (chatWindow) {
-      chatWindow.addEventListener('mouseenter', handleMouseEnter);
-      chatWindow.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (chatWindow) {
-        chatWindow.removeEventListener('mouseenter', handleMouseEnter);
-        chatWindow.removeEventListener('mouseleave', handleMouseLeave);
-      }
-      // Reset body overflow when component unmounts
-      document.body.style.overflow = 'auto';
-    };
-  }, []);
+ 
 
   useEffect(() => {
     if (isOpen) {
@@ -143,6 +119,7 @@ export default function AppChat() {
     //     timestamp: new Date().toLocaleTimeString(),
     //   }]);
     // }
+    
   }, [isOpen]);
 
   useEffect(() => {

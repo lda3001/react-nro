@@ -55,6 +55,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  max-width: 500px;
+  z-index: 1000;
 }
 
 .chatbot-header {
@@ -156,6 +158,10 @@
   padding: 15px;
   scrollbar-width: thin;
   scrollbar-color: #3498db #f0f0f0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+  isolation: isolate;
 }
 
 .message-wrapper {
@@ -466,29 +472,39 @@
   border-bottom-color: #FFD700;
 }
 
-/* Customize scrollbar for Webkit browsers */
+/* Prevent body scroll when scrolling chat */
+.chatbot-window:has(.chatbot-messages:active) ~ body {
+  overflow: hidden;
+}
+
+/* Improve scrollbar appearance */
 .chatbot-messages::-webkit-scrollbar {
   width: 6px;
 }
 
 .chatbot-messages::-webkit-scrollbar-track {
-  background: #f0f0f0;
+  background: #f1f1f1;
   border-radius: 3px;
 }
 
 .chatbot-messages::-webkit-scrollbar-thumb {
-  background-color: #3498db;
+  background: #3498db;
   border-radius: 3px;
 }
 
-/* Lock body scroll when mouse is in chat window */
-.chatbot-window:hover ~ body {
-  overflow: hidden;
+.chatbot-messages::-webkit-scrollbar-thumb:hover {
+  background: #2980b9;
 }
 
-/* Ensure chat window is scrollable when mouse is in it */
-.chatbot-window:hover .chatbot-messages {
-  overflow-y: auto;
+/* Prevent touch events from propagating to body */
+.chatbot-window {
+  touch-action: pan-y pinch-zoom;
+}
+
+/* Add momentum scrolling for better mobile experience */
+.chatbot-messages {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .mic-button {
