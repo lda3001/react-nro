@@ -81,7 +81,7 @@ export default function AppChat() {
   }, []);
 
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen) {
       
       
       // Initialize socket connection
@@ -461,10 +461,7 @@ export default function AppChat() {
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
-        if(!user){
-          toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
-          return;
-        }
+        
         setIsOpen(!isOpen)}}>
         {isOpen ? "✕" : "💬"}
       </button>
