@@ -215,7 +215,7 @@ export default function AppChat() {
       };
       
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
         setAudioBlob(audioBlob);
   
         // Convert blob to array buffer
@@ -369,7 +369,7 @@ export default function AppChat() {
           return <span key={index}>{part.content}</span>;
         })}
        {message.mimeType && !message.text && (
-            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([message.audioBuffer || ''], { type: message.mimeType || 'audio/webm' }))} />
+            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([message.audioBuffer || ''], { type: message.mimeType || 'audio/mp4' }))} />
        )}
         
       </>
