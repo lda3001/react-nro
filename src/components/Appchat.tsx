@@ -30,7 +30,7 @@ interface ReplyOption {
 }
 
 export default function AppChat() {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +51,8 @@ export default function AppChat() {
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const apiUrl = import.meta.env.VITE_API_URL;
+
 
   // Add mouse event handlers for scroll locking
   useEffect(() => {
@@ -83,7 +85,7 @@ export default function AppChat() {
       
       
       // Initialize socket connection
-      socketRef.current = io('http://localhost:3000');
+      socketRef.current = io(apiUrl || "http://localhost:3000" );
     
 
       // Join the selected chat room
@@ -200,6 +202,10 @@ export default function AppChat() {
 
   // Add audio recording functions
   const startRecording = async () => {
+    if (!user) {
+      toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -454,10 +460,7 @@ export default function AppChat() {
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
-        if(!user){
-          toast.error("Vui lòng đăng nhập để sử dụng tính năng này");
-          return;
-        }
+       
         setIsOpen(!isOpen)}}>
         {isOpen ? "✕" : "💬"}
       </button>
@@ -490,7 +493,7 @@ export default function AppChat() {
           
           <Marquee className="text-red-600 font-bold" pauseOnHover={true}>
           
-          {notification && new Date().getTime() - notification.time < 300000 && (
+          {notification && new Date().getTime() - notification.time < 1800000 && (
             <>
               Thông Báo Admin:       {notification.message}
             </>
