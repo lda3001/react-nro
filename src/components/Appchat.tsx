@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { toast } from "react-toastify";
 import Marquee from "react-fast-marquee";
 import AudioMessagePlayer from "./AudioMessagePlayer";
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 //const BASE_URL = process.env.NEXT_PUBLIC_API_CHATBOT_URL;
 
 interface Message {
@@ -53,6 +54,7 @@ export default function AppChat() {
   const audioChunksRef = useRef<Blob[]>([]);
   const apiUrl = import.meta.env.VITE_API_URL;
 
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Add mouse event handlers for scroll locking
   useEffect(() => {
@@ -457,6 +459,11 @@ export default function AppChat() {
     }
   };
 
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setInputMessage(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
@@ -573,6 +580,18 @@ export default function AppChat() {
               }}
               disabled={isLoading}
             />
+            <button
+              className="emoji-button"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              title="Add Emoji"
+            >
+              😊
+            </button>
+            {showEmojiPicker && (
+              <div className="emoji-picker-container">
+                <EmojiPicker onEmojiClick={onEmojiClick} />
+              </div>
+            )}
             <button
               className={`mic-button ${isRecording ? 'recording' : ''}`}
               onClick={isRecording ? stopRecording : startRecording}
