@@ -83,7 +83,7 @@ export default function AppChat() {
   }, []);
 
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen) {
       
       
       // Initialize socket connection
@@ -467,7 +467,7 @@ export default function AppChat() {
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
-       
+        
         setIsOpen(!isOpen)}}>
         {isOpen ? "✕" : "💬"}
       </button>
