@@ -13,6 +13,7 @@ interface User  {
   character?: {
     name?: string;
     infochar?: string;
+    clanId?: number;  
   };
   // Add other user properties as needed
 }
