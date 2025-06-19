@@ -37,6 +37,16 @@ const chatHistory = new Map();
 // notification if only exits in 5min
 let notification = '';
 
+// Add function to get paginated messages
+const getPaginatedMessages = (roomId, page = 1, limit = 20) => {
+  if (!chatHistory.has(roomId)) {
+    return [];
+  }
+  const messages = Array.from(chatHistory.get(roomId));
+  const startIndex = Math.max(0, messages.length - (page * limit));
+  const endIndex = Math.max(0, messages.length - ((page - 1) * limit));
+  return messages.slice(startIndex, endIndex);
+};
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -57,14 +67,18 @@ io.on('connection', (socket) => {
         info: clan.Info,
         slogan: clan.Slogan,
       });
-     
-      
     }
     
-    // Send chat history to the user when they join
-    if (chatHistory.has(roomId)) {
-      socket.emit('chat_history', Array.from(chatHistory.get(roomId)));
-    }
+    // Send initial chat history (latest messages)
+    const initialMessages = getPaginatedMessages(roomId, 1, 20);
+    socket.emit('chat_history', initialMessages);
+  });
+
+  // Add new event for loading more messages
+  socket.on('load_more_messages', (data) => {
+    const { roomId, page } = data;
+    const messages = getPaginatedMessages(roomId, page, 20);
+    socket.emit('more_messages', messages);
   });
 
   // Handle leaving a chat room
@@ -972,15 +986,24 @@ app.post('/api/milestone', async (req, res) => {
   }
 });
 
-// Add new endpoint to get chat history
+// Modify the chat history endpoint to support pagination
 app.get('/api/chat/history/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const messages = chatHistory.has(roomId) ? Array.from(chatHistory.get(roomId)) : [];
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    
+    const messages = getPaginatedMessages(roomId, page, limit);
+    const totalMessages = chatHistory.has(roomId) ? chatHistory.get(roomId).size : 0;
+    
     res.json({
       success: true,
       message: 'Lấy lịch sử chat thành công!',
-      data: messages
+      data: {
+        messages,
+        totalMessages,
+        hasMore: totalMessages > page * limit
+      }
     });
   } catch (error) {
     console.error('Error fetching chat history:', error);

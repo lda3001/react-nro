@@ -33,6 +33,11 @@ interface ReplyOption {
 export default function AppChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
+  const [messagesPerPage, setMessagesPerPage] = useState(20);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [replyPending, setReplyPending] = useState(false);
@@ -54,15 +59,10 @@ export default function AppChat() {
   const audioChunksRef = useRef<Blob[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
- 
-
   useEffect(() => {
     if (isOpen) {
-      
-      
       // Initialize socket connection
       socketRef.current = io('http://localhost:3000');
-    
 
       // Join the selected chat room
       socketRef.current.emit('join_room', currentRoom);
@@ -70,11 +70,23 @@ export default function AppChat() {
       // Listen for incoming messages
       socketRef.current.on('receive_message', (message: Message) => {
         setMessages(prev => [...prev, message]);
+        setDisplayedMessages(prev => [...prev, message]);
       });
 
       // Listen for chat history
       socketRef.current.on('chat_history', (history: Message[]) => {
         setMessages(history);
+        setDisplayedMessages(history);
+        setHasMoreMessages(history.length === messagesPerPage);
+        setCurrentPage(1);
+      });
+
+      // Listen for more messages
+      socketRef.current.on('more_messages', (newMessages: Message[]) => {
+        setMessages(prev => [...newMessages, ...prev]);
+        setDisplayedMessages(prev => [...newMessages, ...prev]);
+        setHasMoreMessages(newMessages.length === messagesPerPage);
+        setIsLoadingMore(false);
       });
 
       // Listen for clan info
@@ -89,7 +101,6 @@ export default function AppChat() {
       });
 
       socketRef.current.on('notification', (message: any) => {
-        
         setNotification(message);
       });
 
@@ -119,7 +130,6 @@ export default function AppChat() {
     //     timestamp: new Date().toLocaleTimeString(),
     //   }]);
     // }
-    
   }, [isOpen]);
 
   useEffect(() => {
@@ -435,6 +445,21 @@ export default function AppChat() {
     setShowEmojiPicker(false);
   };
 
+  const loadMoreMessages = () => {
+    if (isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    
+    if (socketRef.current) {
+      socketRef.current.emit('load_more_messages', {
+        roomId: currentRoom,
+        page: nextPage
+      });
+    }
+  };
+
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
@@ -480,7 +505,18 @@ export default function AppChat() {
           </Marquee>
         
           <div className="chatbot-messages">
-            {messages.map((message) => (
+            {hasMoreMessages && (
+              <div className="load-more-container">
+                <button 
+                  className="load-more-button"
+                  onClick={loadMoreMessages}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? 'Loading...' : 'Load More Messages'}
+                </button>
+              </div>
+            )}
+            {displayedMessages.map((message) => (
               <div key={message.id} className={`message-wrapper ${message.sender.id === user?.id ? 'user' : ''}`}>
                 {message.sender.id !== user?.id && (
                   <div className="message-avatar">
