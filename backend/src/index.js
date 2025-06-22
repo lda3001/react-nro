@@ -19,6 +19,10 @@ const { Op } = require('sequelize');
 const Milestone = require('./models/Milestone');
 const ItemOptions = require('./models/ItemOptions');
 const Clan = require('./models/Clan');
+const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const { v4: uuidv4 } = require('uuid');
 
 // Import associations
 require('./models/associations');
@@ -47,6 +51,31 @@ const getPaginatedMessages = (roomId, page = 1, limit = 20) => {
   const endIndex = Math.max(0, messages.length - ((page - 1) * limit));
   return messages.slice(startIndex, endIndex);
 };
+
+// Hàm chuyển đổi webm base64 sang mp3 buffer (không lưu file)
+async function convertWebmToMp3Buffer(base64Data) {
+  return new Promise((resolve, reject) => {
+    const tempId = uuidv4();
+    const webmPath = `./temp/${tempId}.webm`;
+    const outputPath = `./temp/${tempId}.mp3`;
+    if (!fs.existsSync('./temp')) fs.mkdirSync('./temp');
+    fs.writeFileSync(webmPath, Buffer.from(base64Data, 'base64'));
+    ffmpeg(webmPath)
+      .toFormat('mp3')
+      .on('end', () => {
+        const mp3Buffer = fs.readFileSync(outputPath);
+        fs.unlinkSync(webmPath);
+        fs.unlinkSync(outputPath);
+        resolve(mp3Buffer);
+      })
+      .on('error', (err) => {
+        if (fs.existsSync(webmPath)) fs.unlinkSync(webmPath);
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+        reject(err);
+      })
+      .save(outputPath);
+  });
+}
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -90,7 +119,7 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send_message', async (data) => {
     try {
-      const { roomId, message, audioBuffer, mimeType, token } = data;
+      const { roomId, message, audioBase64, mimeType, token } = data;
       const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.id;
       // Get user info
@@ -99,18 +128,29 @@ io.on('connection', (socket) => {
         socket.emit('error', { message: 'User not found' });
         return;
       }
-
       // Get character info if exists
       let character = null;
       if (user.character) {
         character = await Character.findByPk(user.character);
       }
-
+      let audioBuffer = null;
+      let audioMimeType = null;
+      if (audioBase64) {
+        try {
+          const mp3Buffer = await convertWebmToMp3Buffer(audioBase64);
+          audioBuffer = mp3Buffer.toString('base64');
+          audioMimeType = 'audio/mp3';
+        } catch (err) {
+          console.error('Audio convert error:', err);
+          socket.emit('error', { message: 'Lỗi chuyển đổi audio' });
+          return;
+        }
+      }
       const messageData = {
         id: Date.now(),
         text: message || '',
-        audioBuffer: audioBuffer || null,
-        mimeType: mimeType || null,
+        audioBuffer: audioBuffer,
+        mimeType: audioMimeType,
         sender: {
           id: user.id,
           username: user.username,
@@ -119,32 +159,23 @@ io.on('connection', (socket) => {
         },
         timestamp: new Date().toLocaleTimeString()
       };
-
       if(roomId != character.ClanId && roomId != 'global'){
         socket.emit('error', { message: `${user.username} không có quyền gửi tin nhắn trong clan này! ${roomId} ${character.ClanId}` });
         return;
       }
-
       if(user.role == 1){
         notification = message;
-        // Broadcast to all connected clients
         io.emit('notification', { message: notification, time: new Date().getTime() });
         return;
       }
-
-      // Store message in chat history
       if (!chatHistory.has(roomId)) {
         chatHistory.set(roomId, new Set());
       }
       chatHistory.get(roomId).add(messageData);
-
-      // Keep only last 100 messages
       const messages = Array.from(chatHistory.get(roomId));
       if (messages.length > 100) {
         chatHistory.set(roomId, new Set(messages.slice(-100)));
       }
-
-      // Broadcast message to room
       io.to(roomId).emit('receive_message', messageData);
     } catch (error) {
       console.error('Error sending message:', error);

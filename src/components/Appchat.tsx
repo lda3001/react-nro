@@ -19,7 +19,7 @@ interface Message {
     Hair: number | null;
   };
   timestamp: string;
-  audioBuffer?: BlobPart;
+  audioBuffer?: string;
   mimeType?: string;
 }
 
@@ -191,7 +191,12 @@ export default function AppChat() {
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+  
+      const supportedType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+  
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
   
@@ -200,22 +205,21 @@ export default function AppChat() {
           audioChunksRef.current.push(event.data);
         }
       };
-      
+  
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: supportedType });
         setAudioBlob(audioBlob);
   
-        // Convert blob to array buffer
         const arrayBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
   
-        // Send audio buffer via WebSocket
         if (socketRef.current) {
           socketRef.current.emit('send_message', {
             roomId: currentRoom,
             message: '',
-            audioBuffer: arrayBuffer,
+            audioBase64: base64Audio,
             mimeType: audioBlob.type,
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
           });
         }
       };
@@ -223,8 +227,7 @@ export default function AppChat() {
       mediaRecorder.start();
       setIsRecording(true);
       isRecordingRef.current = true;
-
-      // Auto stop after 8 seconds
+  
       setTimeout(() => {
         if (isRecordingRef.current && mediaRecorderRef.current) {
           mediaRecorder.stop();
@@ -233,7 +236,6 @@ export default function AppChat() {
           toast.info('Đã đạt giới hạn ghi âm 8 giây');
         }
       }, 9000);
-
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast.error('Không thể truy cập microphone');
@@ -355,8 +357,8 @@ export default function AppChat() {
           }
           return <span key={index}>{part.content}</span>;
         })}
-       {message.mimeType && !message.text && (
-            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([message.audioBuffer || ''], { type: message.mimeType || 'audio/mp4' }))} />
+       {message.mimeType && !message.text && message.audioBuffer && (
+            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([Uint8Array.from(atob(message.audioBuffer), c => c.charCodeAt(0))], { type: message.mimeType }))} />
        )}
         
       </>
