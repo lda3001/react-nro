@@ -560,3 +560,29 @@
   margin-bottom: 10px;
   z-index: 1000;
 }
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  width: 100%;
+}
+
+.load-more-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.load-more-button:hover {
+  background-color: #357abd;
+}
+
+.load-more-button:active {
+  background-color: #2a5f94;
+}

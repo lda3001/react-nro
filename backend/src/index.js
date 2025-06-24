@@ -19,6 +19,10 @@ const { Op } = require('sequelize');
 const Milestone = require('./models/Milestone');
 const ItemOptions = require('./models/ItemOptions');
 const Clan = require('./models/Clan');
+const fs = require('fs');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const { v4: uuidv4 } = require('uuid');
 
 // Import associations
 require('./models/associations');
@@ -31,12 +35,48 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+app.set('trust proxy', true);
 
 // Store chat messages in memory (you might want to use a database in production)
 const chatHistory = new Map();
 // notification if only exits in 5min
 let notification = '';
 
+// Add function to get paginated messages
+const getPaginatedMessages = (roomId, page = 1, limit = 20) => {
+  if (!chatHistory.has(roomId)) {
+    return [];
+  }
+  const messages = Array.from(chatHistory.get(roomId));
+  const startIndex = Math.max(0, messages.length - (page * limit));
+  const endIndex = Math.max(0, messages.length - ((page - 1) * limit));
+  return messages.slice(startIndex, endIndex);
+};
+
+// Hàm chuyển đổi webm base64 sang mp3 buffer (không lưu file)
+async function convertWebmToMp3Buffer(base64Data) {
+  return new Promise((resolve, reject) => {
+    const tempId = uuidv4();
+    const webmPath = `./temp/${tempId}.webm`;
+    const outputPath = `./temp/${tempId}.mp3`;
+    if (!fs.existsSync('./temp')) fs.mkdirSync('./temp');
+    fs.writeFileSync(webmPath, Buffer.from(base64Data, 'base64'));
+    ffmpeg(webmPath)
+      .toFormat('mp3')
+      .on('end', () => {
+        const mp3Buffer = fs.readFileSync(outputPath);
+        fs.unlinkSync(webmPath);
+        fs.unlinkSync(outputPath);
+        resolve(mp3Buffer);
+      })
+      .on('error', (err) => {
+        if (fs.existsSync(webmPath)) fs.unlinkSync(webmPath);
+        if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+        reject(err);
+      })
+      .save(outputPath);
+  });
+}
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
@@ -57,14 +97,18 @@ io.on('connection', (socket) => {
         info: clan.Info,
         slogan: clan.Slogan,
       });
-     
-      
     }
     
-    // Send chat history to the user when they join
-    if (chatHistory.has(roomId)) {
-      socket.emit('chat_history', Array.from(chatHistory.get(roomId)));
-    }
+    // Send initial chat history (latest messages)
+    const initialMessages = getPaginatedMessages(roomId, 1, 20);
+    socket.emit('chat_history', initialMessages);
+  });
+
+  // Add new event for loading more messages
+  socket.on('load_more_messages', (data) => {
+    const { roomId, page } = data;
+    const messages = getPaginatedMessages(roomId, page, 20);
+    socket.emit('more_messages', messages);
   });
 
   // Handle leaving a chat room
@@ -76,7 +120,7 @@ io.on('connection', (socket) => {
   // Handle chat messages
   socket.on('send_message', async (data) => {
     try {
-      const { roomId, message, audioBuffer, mimeType, token } = data;
+      const { roomId, message, audioBase64, mimeType, token } = data;
       const decoded = jwt.verify(token, JWT_SECRET);
       const userId = decoded.id;
       // Get user info
@@ -85,18 +129,29 @@ io.on('connection', (socket) => {
         socket.emit('error', { message: 'User not found' });
         return;
       }
-
       // Get character info if exists
       let character = null;
       if (user.character) {
         character = await Character.findByPk(user.character);
       }
-
+      let audioBuffer = null;
+      let audioMimeType = null;
+      if (audioBase64) {
+        try {
+          const mp3Buffer = await convertWebmToMp3Buffer(audioBase64);
+          audioBuffer = mp3Buffer.toString('base64');
+          audioMimeType = 'audio/mp3';
+        } catch (err) {
+          console.error('Audio convert error:', err);
+          socket.emit('error', { message: 'Lỗi chuyển đổi audio' });
+          return;
+        }
+      }
       const messageData = {
         id: Date.now(),
         text: message || '',
-        audioBuffer: audioBuffer || null,
-        mimeType: mimeType || null,
+        audioBuffer: audioBuffer,
+        mimeType: audioMimeType,
         sender: {
           id: user.id,
           username: user.username,
@@ -105,32 +160,23 @@ io.on('connection', (socket) => {
         },
         timestamp: new Date().toLocaleTimeString()
       };
-
       if(roomId != character.ClanId && roomId != 'global'){
         socket.emit('error', { message: `${user.username} không có quyền gửi tin nhắn trong clan này! ${roomId} ${character.ClanId}` });
         return;
       }
-
       if(user.role == 1){
         notification = message;
-        // Broadcast to all connected clients
         io.emit('notification', { message: notification, time: new Date().getTime() });
         return;
       }
-
-      // Store message in chat history
       if (!chatHistory.has(roomId)) {
         chatHistory.set(roomId, new Set());
       }
       chatHistory.get(roomId).add(messageData);
-
-      // Keep only last 100 messages
       const messages = Array.from(chatHistory.get(roomId));
       if (messages.length > 100) {
         chatHistory.set(roomId, new Set(messages.slice(-100)));
       }
-
-      // Broadcast message to room
       io.to(roomId).emit('receive_message', messageData);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -168,14 +214,21 @@ const limiter = rateLimit({
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   max: 10, // Giới hạn 10 lần đăng nhập sai mỗi IP trong 15 phút
-  message: {
-    success: false,
-    message: 'Quá nhiều lần đăng nhập sai, vui lòng thử lại sau 15 phút!'
+  
+  handler: (req, res) => {
+    console.log(`[LOGIN RATE LIMIT] IP bị chặn: ${req.ip} | Đường dẫn: ${req.originalUrl}`);
+    res.status(429).json({
+      success: false,
+      message: 'Quá nhiều lần đăng nhập sai, vui lòng thử lại sau 15 phút!'
+    });
   }
 });
 
 // Áp dụng rate limiting cho tất cả các routes
-app.use(limiter);
+app.use((req, res, next) => {
+  if (['/api/login', '/api/register'].includes(req.path)) return next();
+  return limiter(req, res, next);
+});
 
 // Rate limiting riêng cho route đăng ký
 const registerLimiter = rateLimit({
@@ -1037,15 +1090,24 @@ app.post('/api/milestone', async (req, res) => {
   }
 });
 
-// Add new endpoint to get chat history
+// Modify the chat history endpoint to support pagination
 app.get('/api/chat/history/:roomId', async (req, res) => {
   try {
     const { roomId } = req.params;
-    const messages = chatHistory.has(roomId) ? Array.from(chatHistory.get(roomId)) : [];
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    
+    const messages = getPaginatedMessages(roomId, page, limit);
+    const totalMessages = chatHistory.has(roomId) ? chatHistory.get(roomId).size : 0;
+    
     res.json({
       success: true,
       message: 'Lấy lịch sử chat thành công!',
-      data: messages
+      data: {
+        messages,
+        totalMessages,
+        hasMore: totalMessages > page * limit
+      }
     });
   } catch (error) {
     console.error('Error fetching chat history:', error);

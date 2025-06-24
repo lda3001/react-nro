@@ -19,7 +19,7 @@ interface Message {
     Hair: number | null;
   };
   timestamp: string;
-  audioBuffer?: BlobPart;
+  audioBuffer?: string;
   mimeType?: string;
 }
 
@@ -33,6 +33,11 @@ interface ReplyOption {
 export default function AppChat() {
   const [isOpen, setIsOpen] = useState(true);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [displayedMessages, setDisplayedMessages] = useState<Message[]>([]);
+  const [messagesPerPage, setMessagesPerPage] = useState(20);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [replyPending, setReplyPending] = useState(false);
@@ -56,12 +61,8 @@ export default function AppChat() {
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
- 
-
   useEffect(() => {
     if (isOpen) {
-      
-      
       // Initialize socket connection
       socketRef.current = io(apiUrl || "http://localhost:3000" );
     
@@ -72,11 +73,23 @@ export default function AppChat() {
       // Listen for incoming messages
       socketRef.current.on('receive_message', (message: Message) => {
         setMessages(prev => [...prev, message]);
+        setDisplayedMessages(prev => [...prev, message]);
       });
 
       // Listen for chat history
       socketRef.current.on('chat_history', (history: Message[]) => {
         setMessages(history);
+        setDisplayedMessages(history);
+        setHasMoreMessages(history.length === messagesPerPage);
+        setCurrentPage(1);
+      });
+
+      // Listen for more messages
+      socketRef.current.on('more_messages', (newMessages: Message[]) => {
+        setMessages(prev => [...newMessages, ...prev]);
+        setDisplayedMessages(prev => [...newMessages, ...prev]);
+        setHasMoreMessages(newMessages.length === messagesPerPage);
+        setIsLoadingMore(false);
       });
 
       // Listen for clan info
@@ -91,7 +104,6 @@ export default function AppChat() {
       });
 
       socketRef.current.on('notification', (message: any) => {
-        
         setNotification(message);
       });
 
@@ -121,7 +133,6 @@ export default function AppChat() {
     //     timestamp: new Date().toLocaleTimeString(),
     //   }]);
     // }
-    
   }, [isOpen]);
 
   useEffect(() => {
@@ -187,7 +198,12 @@ export default function AppChat() {
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
+  
+      const supportedType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : 'audio/webm';
+  
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: supportedType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
   
@@ -196,22 +212,21 @@ export default function AppChat() {
           audioChunksRef.current.push(event.data);
         }
       };
-      
+  
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/mp4' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: supportedType });
         setAudioBlob(audioBlob);
   
-        // Convert blob to array buffer
         const arrayBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
   
-        // Send audio buffer via WebSocket
         if (socketRef.current) {
           socketRef.current.emit('send_message', {
             roomId: currentRoom,
             message: '',
-            audioBuffer: arrayBuffer,
+            audioBase64: base64Audio,
             mimeType: audioBlob.type,
-            token: localStorage.getItem('token')
+            token: localStorage.getItem('token'),
           });
         }
       };
@@ -219,8 +234,7 @@ export default function AppChat() {
       mediaRecorder.start();
       setIsRecording(true);
       isRecordingRef.current = true;
-
-      // Auto stop after 8 seconds
+  
       setTimeout(() => {
         if (isRecordingRef.current && mediaRecorderRef.current) {
           mediaRecorder.stop();
@@ -229,7 +243,6 @@ export default function AppChat() {
           toast.info('Đã đạt giới hạn ghi âm 8 giây');
         }
       }, 9000);
-
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast.error('Không thể truy cập microphone');
@@ -351,8 +364,8 @@ export default function AppChat() {
           }
           return <span key={index}>{part.content}</span>;
         })}
-       {message.mimeType && !message.text && (
-            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([message.audioBuffer || ''], { type: message.mimeType || 'audio/mp4' }))} />
+       {message.mimeType && !message.text && message.audioBuffer && (
+            <AudioMessagePlayer audioUrl={URL.createObjectURL(new Blob([Uint8Array.from(atob(message.audioBuffer), c => c.charCodeAt(0))], { type: message.mimeType }))} />
        )}
         
       </>
@@ -441,6 +454,21 @@ export default function AppChat() {
     setShowEmojiPicker(false);
   };
 
+  const loadMoreMessages = () => {
+    if (isLoadingMore) return;
+    
+    setIsLoadingMore(true);
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    
+    if (socketRef.current) {
+      socketRef.current.emit('load_more_messages', {
+        roomId: currentRoom,
+        page: nextPage
+      });
+    }
+  };
+
   return (
     <div className="chatbot-container">
       <button className="chatbot-toggle" onClick={() => {
@@ -486,7 +514,18 @@ export default function AppChat() {
           </Marquee>
         
           <div className="chatbot-messages">
-            {messages.map((message) => (
+            {hasMoreMessages && (
+              <div className="load-more-container">
+                <button 
+                  className="load-more-button"
+                  onClick={loadMoreMessages}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? 'Loading...' : 'Load More Messages'}
+                </button>
+              </div>
+            )}
+            {displayedMessages.map((message) => (
               <div key={message.id} className={`message-wrapper ${message.sender.id === user?.id ? 'user' : ''}`}>
                 {message.sender.id !== user?.id && (
                   <div className="message-avatar">
