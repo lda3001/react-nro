@@ -35,6 +35,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"]
   }
 });
+app.set('trust proxy', true);
 
 // Store chat messages in memory (you might want to use a database in production)
 const chatHistory = new Map();
@@ -212,14 +213,21 @@ const limiter = rateLimit({
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   max: 10, // Giới hạn 10 lần đăng nhập sai mỗi IP trong 15 phút
-  message: {
-    success: false,
-    message: 'Quá nhiều lần đăng nhập sai, vui lòng thử lại sau 15 phút!'
+  
+  handler: (req, res) => {
+    console.log(`[LOGIN RATE LIMIT] IP bị chặn: ${req.ip} | Đường dẫn: ${req.originalUrl}`);
+    res.status(429).json({
+      success: false,
+      message: 'Quá nhiều lần đăng nhập sai, vui lòng thử lại sau 15 phút!'
+    });
   }
 });
 
 // Áp dụng rate limiting cho tất cả các routes
-app.use(limiter);
+app.use((req, res, next) => {
+  if (['/api/login', '/api/register'].includes(req.path)) return next();
+  return limiter(req, res, next);
+});
 
 // Rate limiting riêng cho route đăng ký
 const registerLimiter = rateLimit({
@@ -718,6 +726,7 @@ app.post('/api/posts', async (req, res) => {
 app.get('/api/ranking/power', async (req, res) => {
   try {
     const isTopNewbie = req.query.isTopNewbie === 'true';
+    
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
       limit: 10,
