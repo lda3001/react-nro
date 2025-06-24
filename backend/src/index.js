@@ -562,6 +562,15 @@ app.get('/api/ranking/power', async (req, res) => {
     });
     
     const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const userWhere = {};
+    if (isTopNewbie) {
+      userWhere.created_at = {
+        [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+      };
+    }
+    if (serverselected) {
+      userWhere.sv_port = serverselected;
+    }
     
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
@@ -569,18 +578,7 @@ app.get('/api/ranking/power', async (req, res) => {
       include: [{
         model: User,
         attributes: ['created_at', 'sv_port'],
-        ...(isTopNewbie && {
-          where: {
-            created_at: {
-              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
-            }
-          }
-        }),
-        ...(serverselected && {
-          where: {
-            sv_port: serverselected
-          }
-        })
+        ...(Object.keys(userWhere).length && { where: userWhere })
       }]
     });
    
@@ -618,21 +616,21 @@ app.get('/api/ranking/recharge', async (req, res) => {
       ]
     });
     const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const userWhere = {};
+    if (isTopNewbie) {
+      userWhere.created_at = {
+        [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+      };
+    }
+    if (serverselected) {
+      userWhere.sv_port = serverselected;
+    }
     let users = await User.findAll({
       include: [{
         model: Character,
         attributes: ['Name']
       }],
-      where: isTopNewbie ? {
-        created_at: {
-          [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
-        }
-      } : {} ,
-      ...(serverselected && {
-        where: {
-          sv_port: serverselected
-        }
-      }),
+        ...(Object.keys(userWhere).length && { where: userWhere }),
       order: [['tongnap', 'DESC']],
       limit: 10,
       attributes: ['tongnap','sv_port']
@@ -672,24 +670,22 @@ app.get('/api/ranking/event', async (req, res) => {
       ]
     });
     const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const userWhere = {};
+    if (isTopNewbie) {
+      userWhere.created_at = {
+        [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+      };
+    }
+    if (serverselected) {
+      userWhere.sv_port = serverselected;
+    }
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.diemsanbosstet')) AS UNSIGNED)`), 'DESC']],
       limit: 10,
       include: [{
         model: User,
         attributes: ['created_at', 'sv_port'],
-        ...(isTopNewbie && {
-          where: {
-            created_at: {
-              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
-            }
-          }
-        }),
-        ...(serverselected && {
-          where: {
-            sv_port: serverselected
-          }
-        })
+        ...(Object.keys(userWhere).length && { where: userWhere })
       }]
     });
    
@@ -726,6 +722,15 @@ app.get('/api/ranking/task', async (req, res) => {
       ]
     });
     const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const userWhere = {};
+    if (isTopNewbie) {
+      userWhere.created_at = {
+        [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
+      };
+    }
+    if (serverselected) {
+      userWhere.sv_port = serverselected;
+    }
     let characters = await Character.findAll({
       order: [
         [sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Task.Id')) AS UNSIGNED)`), 'DESC'],
@@ -736,18 +741,7 @@ app.get('/api/ranking/task', async (req, res) => {
       include: [{
         model: User,
         attributes: ['created_at', 'sv_port'],
-        ...(isTopNewbie && {
-          where: {
-            created_at: {
-              [Op.between]: [new Date('2025-06-08'), new Date('2025-06-15')]
-            }
-          }
-        }),
-        ...(serverselected && {
-          where: {
-            sv_port: serverselected
-          }
-        })
+        ...(Object.keys(userWhere).length && { where: userWhere })
       }]
     });
     
