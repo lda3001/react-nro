@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const axios = require('axios');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 const sequelize = require('./models/index');
 const User = require('./models/User');
@@ -16,12 +18,131 @@ const TaskTemplate = require('./models/TaskTemplate');
 const { Op } = require('sequelize');
 const Milestone = require('./models/Milestone');
 const ItemOptions = require('./models/ItemOptions');
+const Clan = require('./models/Clan');
 
 // Import associations
 require('./models/associations');
 
 const app = express();
-app.set('trust proxy', 1);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
+
+// Store chat messages in memory (you might want to use a database in production)
+const chatHistory = new Map();
+// notification if only exits in 5min
+let notification = '';
+
+
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Handle joining a chat room
+  socket.on('join_room', async (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room: ${roomId}`);
+    if(roomId != 'global'){
+      const clan = await Clan.findByPk(roomId);
+      if(!clan){
+        socket.emit('error', { message: 'Clan không tồn tại' });
+        return;
+      }
+      socket.emit('clan_info', {
+        id: clan.id,
+        name: clan.Name,
+        info: clan.Info,
+        slogan: clan.Slogan,
+      });
+     
+      
+    }
+    
+    // Send chat history to the user when they join
+    if (chatHistory.has(roomId)) {
+      socket.emit('chat_history', Array.from(chatHistory.get(roomId)));
+    }
+  });
+
+  // Handle leaving a chat room
+  socket.on('leave_room', (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.id} left room: ${roomId}`);
+  });
+
+  // Handle chat messages
+  socket.on('send_message', async (data) => {
+    try {
+      const { roomId, message, audioBuffer, mimeType, token } = data;
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const userId = decoded.id;
+      // Get user info
+      const user = await User.findByPk(userId);
+      if (!user) {
+        socket.emit('error', { message: 'User not found' });
+        return;
+      }
+
+      // Get character info if exists
+      let character = null;
+      if (user.character) {
+        character = await Character.findByPk(user.character);
+      }
+
+      const messageData = {
+        id: Date.now(),
+        text: message || '',
+        audioBuffer: audioBuffer || null,
+        mimeType: mimeType || null,
+        sender: {
+          id: user.id,
+          username: user.username,
+          characterName: character ? character.Name : null,
+          Hair: character ? JSON.parse(character.InfoChar).Hair : null
+        },
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      if(roomId != character.ClanId && roomId != 'global'){
+        socket.emit('error', { message: `${user.username} không có quyền gửi tin nhắn trong clan này! ${roomId} ${character.ClanId}` });
+        return;
+      }
+
+      if(user.role == 1){
+        notification = message;
+        // Broadcast to all connected clients
+        io.emit('notification', { message: notification, time: new Date().getTime() });
+        return;
+      }
+
+      // Store message in chat history
+      if (!chatHistory.has(roomId)) {
+        chatHistory.set(roomId, new Set());
+      }
+      chatHistory.get(roomId).add(messageData);
+
+      // Keep only last 100 messages
+      const messages = Array.from(chatHistory.get(roomId));
+      if (messages.length > 100) {
+        chatHistory.set(roomId, new Set(messages.slice(-100)));
+      }
+
+      // Broadcast message to room
+      io.to(roomId).emit('receive_message', messageData);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      socket.emit('error', { message: 'Error sending message' });
+    }
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
 
 // Cấu hình phục vụ file tĩnh
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
@@ -93,6 +214,7 @@ sequelize.sync({ alter: true, force: false })
     // Finally sync other models
     
     await TaskTemplate.sync({ alter: true });
+    await Clan.sync({ alter: true });
     console.log('Database synced successfully');
   })
   .catch((err) => {
@@ -360,8 +482,8 @@ app.get('/api/user', async (req, res) => {
     character = {
       id: 0,
       name: '',
-      infochar: ''
-
+      infochar: '',
+      clanId: -1,
     }
   }
     
@@ -380,6 +502,7 @@ app.get('/api/user', async (req, res) => {
         id: character.id || 0,
         name: character.Name || '',
         infochar: character.InfoChar || '',
+        clanId: character.ClanId || -1,
       }
     }
   });
@@ -803,14 +926,14 @@ app.post('/api/milestone', async (req, res) => {
     if(!listPort.includes(user.sv_port)) {
       return res.status(403).json({
         success: false,
-        err: 'Server này chưa áp dụng mốc nạp!'
+        error: 'Server này chưa áp dụng mốc nạp!'
       });
     }
 
     if(user.online === 1) {
       return res.status(403).json({
         success: false,
-        err: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
+        error: 'Tài Khoản đang online vui lòng thoát game trước khi nhận thưởng!'
       });
     }
     const character = await Character.findByPk(user.character);
@@ -914,8 +1037,27 @@ app.post('/api/milestone', async (req, res) => {
   }
 });
 
+// Add new endpoint to get chat history
+app.get('/api/chat/history/:roomId', async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    const messages = chatHistory.has(roomId) ? Array.from(chatHistory.get(roomId)) : [];
+    res.json({
+      success: true,
+      message: 'Lấy lịch sử chat thành công!',
+      data: messages
+    });
+  } catch (error) {
+    console.error('Error fetching chat history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra, vui lòng thử lại sau!'
+    });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 }); 
