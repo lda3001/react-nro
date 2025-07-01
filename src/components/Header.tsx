@@ -127,9 +127,18 @@ const Header = () => {
     }
   };
 
+  const getIP = async () => {
+    const response = await fetch('https://api.ipify.org?format=json');
+    const data = await response.json();
+    return data.ip;
+  };
+
   const onLoginSubmit = async (data: LoginFormData) => {
     try {
       setError('');
+      const ip = await getIP();
+      console.log(ip);
+
       await login(data.username, data.password);
       setIsLoginModalOpen(false);
       resetLoginForm();
