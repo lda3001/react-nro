@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { milestoneAPI } from '../services/api';
 import { toast } from 'react-toastify';
+import { Helmet } from 'react-helmet';
 
 interface Milestone {
     milestone: number;
@@ -77,6 +78,19 @@ const Milestone= () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-b py-3">
+            <Helmet>
+                <title>Mốc Nhận Thưởng Ngọc Rồng Fun</title>
+                <meta name="description" content="Mốc Nhận Thưởng Ngọc Rồng Fun" />
+                <meta name="keywords" content="Ngọc Rồng Fun, Ngọc Rồng, Ngọc Rồng Online, Ngọc Rồng Game, Ngọc Rồng Mobile, Ngọc Rồng PC, Ngọc Rồng Web, Ngọc Rồng Browser, Ngọc Rồng Browser Game, Ngọc Rồng Browser Game Online, Ngọc Rồng Browser Game Mobile, Ngọc Rồng Browser Game PC, Ngọc Rồng Browser Game Web" />
+                <meta name="author" content="Ngọc Rồng Fun" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <meta name="robots" content="index, follow" />
+                <meta name="googlebot" content="index, follow" />
+                <meta name="bingbot" content="index, follow" />
+                <meta name="yandexbot" content="index, follow" />
+                <meta name="og:title" content="Mốc Nhận Thưởng Ngọc Rồng Fun" />
+                <meta name="og:description" content="Mốc Nhận Thưởng Ngọc Rồng Fun" />
+            </Helmet>
             <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
                 <div className="text-center mb-6 sm:mb-12">
                     <h1 className="text-2xl sm:text-4xl font-bold mb-2 sm:mb-4 text-white">Mốc Nhận Thưởng</h1>
