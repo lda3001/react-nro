@@ -737,7 +737,8 @@ app.get('/api/ranking/power', async (req, res) => {
       ]
     });
     
-    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const serverselected = sv ? listServer.find(server => server.id === parseInt(sv))?.Port : null;
+
     const userWhere = {};
     if (isTopNewbie) {
       userWhere.created_at = {
@@ -751,8 +752,10 @@ app.get('/api/ranking/power', async (req, res) => {
     let characters = await Character.findAll({
       order: [[sequelize.literal(`CAST(JSON_UNQUOTE(JSON_EXTRACT(Infochar, '$.Power')) AS UNSIGNED)`), 'DESC']],
       limit: 10,
+      
       include: [{
         model: User,
+        required: true,
         attributes: ['created_at', 'sv_port'],
         ...(Object.keys(userWhere).length && { where: userWhere })
       }]
@@ -845,7 +848,7 @@ app.get('/api/ranking/event', async (req, res) => {
         ['id', 'ASC']
       ]
     });
-    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const serverselected = sv ? listServer.find(server => server.id === parseInt(sv))?.Port : null;
     const userWhere = {};
     if (isTopNewbie) {
       userWhere.created_at = {
@@ -860,6 +863,7 @@ app.get('/api/ranking/event', async (req, res) => {
       limit: 10,
       include: [{
         model: User,
+        required: true,
         attributes: ['created_at', 'sv_port'],
         ...(Object.keys(userWhere).length && { where: userWhere })
       }]
@@ -897,7 +901,7 @@ app.get('/api/ranking/task', async (req, res) => {
         ['id', 'ASC']
       ]
     });
-    const serverselected = listServer.find(server => server.id === parseInt(sv))?.Port;
+    const serverselected = sv ? listServer.find(server => server.id === parseInt(sv))?.Port : null;
     const userWhere = {};
     if (isTopNewbie) {
       userWhere.created_at = {
@@ -916,6 +920,7 @@ app.get('/api/ranking/task', async (req, res) => {
       limit: 10,
       include: [{
         model: User,
+        required: true,
         attributes: ['created_at', 'sv_port'],
         ...(Object.keys(userWhere).length && { where: userWhere })
       }]
