@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { postAPI } from '../services/api';
 import getImageLink from '../helper/helper';
+import { Helmet } from 'react-helmet';
 
 
 interface PostDetail {
@@ -64,6 +65,19 @@ const PostDetail = () => {
         </div>
       <div className="max-w-4xl mx-auto bg-[#2a212e]  rounded-lg shadow-lg overflow-hidden">
         {/* Post Header */}
+        <Helmet>
+          <title>{post.title}</title>
+          <meta name="description" content={post.content} />
+          <meta name="keywords" content={post.title} />
+          <meta name="author" content="Ngọc Rồng Fun" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta name="robots" content="index, follow" />
+          <meta name="googlebot" content="index, follow" />
+          <meta name="bingbot" content="index, follow" />
+          <meta name="yandexbot" content="index, follow" />
+          <meta name="og:title" content={post.title} />
+          <meta name="og:description" content={post.content} />
+        </Helmet>
         <div className="relative">
           <img
             src={getImageLink(post.image_post)}

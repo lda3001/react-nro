@@ -69,7 +69,8 @@ class MBBankService {
   }
 
   async login(username, password) {
-    await this.downloadWasmFile();
+    try {
+      await this.downloadWasmFile();
     
     const base64Image = await this.getCaptcha();
     const captchaSolution = await this.solveCaptcha(base64Image);
@@ -101,7 +102,12 @@ class MBBankService {
       }
     );
 
-    return response.data;
+      return response.data;
+    } catch (error) {
+      console.error('Error logging in:', error);
+      throw error;
+    }
+    
   }
 
   async getTransactionHistory(sessionId, accountNo, deviceIdCommon, username) {
