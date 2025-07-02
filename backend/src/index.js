@@ -975,7 +975,7 @@ app.post('/api/milestone', async (req, res) => {
         message: 'Không tìm thấy người dùng!'
       });
     }
-    const listPort = [22345];
+    const listPort = [2233333];
     if(!listPort.includes(user.sv_port)) {
       return res.status(403).json({
         success: false,

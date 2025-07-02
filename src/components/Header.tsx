@@ -213,7 +213,7 @@ const Header = () => {
               </li>
               <li className="menu-item">
                 <a
-                  href="https://zalo.me/g/fpattt148"
+                  href="https://zalo.me/g/ocvedd770"
                   className="px-6 py-2 btn-community  text-black font-bold rounded inline-block transform hover:scale-105 transition-transform w-32 h-12"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -281,7 +281,7 @@ const Header = () => {
                   </li>
                   <li>
                     <a
-                      href="https://zalo.me/g/fpattt148"
+                      href="https://zalo.me/g/ocvedd770"
                       className="px-4 py-2 btn-yellow text-black font-bold rounded block text-center"
                       target="_blank"
                       rel="noopener noreferrer"
