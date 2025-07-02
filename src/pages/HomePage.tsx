@@ -32,11 +32,13 @@ const HomePage = () => {
         <meta name="og:site_name" content="Ngọc Rồng Fun" />
       </Helmet>
       <DownloadSection />
+      
       <NewsSection />
+      <CandlestickChart />
       <RankingSection />
       <CharacterShowcase />
       <GameFeatures />
-      <CandlestickChart />
+      
     </div>
   );
 };

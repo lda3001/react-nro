@@ -79,7 +79,7 @@ const CandlestickChart = () => {
         <div className="chart-header">
           <h2 className="chart-title">
             <span role="img" aria-label="chart">📈</span>
-            Biểu Đồ Thị Trường Ngọc Rồng
+            Biểu Đồ Giá Túi Vàng Ngọc Rồng Fun
           </h2>
           <p className="chart-subtitle">Theo dõi biến động giá trị trong game theo thời gian thực (1 giờ/nến)</p>
         </div>
